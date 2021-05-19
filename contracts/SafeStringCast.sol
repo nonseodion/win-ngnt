@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.0;
 
 library SafeStringCast {
     function toUint(string memory self) pure internal returns(uint16){

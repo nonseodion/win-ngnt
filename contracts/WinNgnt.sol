@@ -1,22 +1,20 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.0;
 
-import "./provableAPI.sol";
 import "./SafeStringCast.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapExchange.sol";
 import { SafeIntCast } from "./SafeIntCast.sol";
-import "@0x/contracts-utils/contracts/src/LibBytes.sol";
+//import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
-import "@openzeppelin/contracts-ethereum-package/contracts/GSN/GSNRecipient.sol";
 
 
-contract WinNgnt is GSNRecipient, usingProvable {
+contract WinNgnt {
     using SafeMath for uint256;
     using SafeStringCast for string;
 
     IERC20 private _ngnt;
     IUniswapExchange private _uniswap;
-    IRelayHub private _relayHub;
+    //IRelayHub private _relayHub;
     uint public TOTAL_NGNT = 0;
 
     struct Game {
@@ -73,59 +71,55 @@ contract WinNgnt is GSNRecipient, usingProvable {
         _;
     }
 
-    modifier isCalledByAProvableCallbackAddress(address caller){
-        require(caller == provable_cbAddress(), "Callback can only be called by a provable callback address");
-        _;
-    }
-
     modifier queryIdHasNotBeenProcessed(bytes32 queryId){
         require (pendingQueries[queryId] == true);
         _;
     }
 
-    constructor(IERC20 ngnt, IUniswapExchange uniswap, IRelayHub relayHub,uint _maximumPurchasableTickets) public {
-        GSNRecipient.initialize();
+    constructor(IERC20 ngnt, IUniswapExchange uniswap, uint _maximumPurchasableTickets) public {
+        
         _ngnt = ngnt;
         _uniswap = uniswap;
-        _relayHub = relayHub;
+        //_relayHub = relayHub;
         maximumPurchasableTickets = _maximumPurchasableTickets;
     }
 
     function buyTicket(uint numberOfTickets) atLeastOneTicket(numberOfTickets) ticketLimitNotExceed(numberOfTickets)
-    maxTicketPerAddressLimitNotExceed(_msgSender(), numberOfTickets)
+    maxTicketPerAddressLimitNotExceed(msg.sender, numberOfTickets)
     external
     {
         uint totalTicketPrice = ticketPrice.mul(numberOfTickets);
-        uint totalAddressTicketCount = addressTicketCount[_msgSender()];
-        uint totalAddressTicketCountPerGame = addressTicketCountPerGame[gameNumber][_msgSender()];
+        uint totalAddressTicketCount = addressTicketCount[msg.sender];
+        uint totalAddressTicketCountPerGame = addressTicketCountPerGame[gameNumber][msg.sender];
 
-        if (!addressHasPaidGsnFee[_msgSender()]) {
-            uint gsnFee = _ngnt.gsnFee();
+        if (!addressHasPaidGsnFee[msg.sender]) {
+            //uint gsnFee = _ngnt.gsnFee();
+            uint gsnFee = 5000;
             if (gsnFee <= 0) {
                 gsnFee = 5000;
             }
 
             totalTicketPrice = totalTicketPrice.sub(gsnFee);
-            addressHasPaidGsnFee[_msgSender()] = true;
+            addressHasPaidGsnFee[msg.sender] = true;
         }
 
         TOTAL_NGNT += totalTicketPrice;
-        _ngnt.transferFrom(_msgSender(), address(this), totalTicketPrice);
+        _ngnt.transferFrom(msg.sender, address(this), totalTicketPrice);
 
         totalAddressTicketCount += numberOfTickets;
         totalAddressTicketCountPerGame += numberOfTickets;
         
-        addressTicketCount[_msgSender()] = totalAddressTicketCount;
-        addressTicketCountPerGame[gameNumber][_msgSender()] = totalAddressTicketCountPerGame;
+        addressTicketCount[msg.sender] = totalAddressTicketCount;
+        addressTicketCountPerGame[gameNumber][msg.sender] = totalAddressTicketCountPerGame;
 
         Game storage game = games[gameNumber];
         game.gameNumber = gameNumber;
         for(uint i = 0; i < numberOfTickets; i++){
-            game.tickets.push(_msgSender());
+            game.tickets.push(msg.sender);
         }
 
         address[] memory tickets = game.tickets;
-        emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
+        emit BoughtTicket(msg.sender, numberOfTickets, totalTicketPrice);
         emit Tickets(tickets);
 
         if(games[gameNumber].tickets.length == maximumPurchasableTickets){
@@ -153,37 +147,41 @@ contract WinNgnt is GSNRecipient, usingProvable {
         return address(_ngnt);
     }
 
-    function __callback(bytes32 queryId, string memory _result) isCalledByAProvableCallbackAddress(_msgSender())
-    queryIdHasNotBeenProcessed(queryId) public
-    {
-        if(games[gameNumber].tickets.length == maximumPurchasableTickets){
-            uint16 randomIndex = _result.toUint();
-            emit RandomNumberGenerated(randomIndex);
-            delete pendingQueries[queryId];
+    // function __callback(bytes32 queryId, string memory _result) isCalledByAProvableCallbackAddress(msg.sender)
+    // queryIdHasNotBeenProcessed(queryId) public
+    // {
+    //     if(games[gameNumber].tickets.length == maximumPurchasableTickets){
+    //         uint16 randomIndex = _result.toUint();
+    //         emit RandomNumberGenerated(randomIndex);
+    //         delete pendingQueries[queryId];
 
-            sendNgntToWinner(randomIndex);
-            resetGame();
-        }
-    }
+    //         sendNgntToWinner(randomIndex);
+    //         resetGame();
+    //     }
+    // }
+
+    // function generateRandomNumber() private {
+    //     if (provable_getPrice("WolframAlpha") > address(this).balance) {
+    //         emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
+    //     }
+    //     else {
+    //         uint lastIndex = 0;
+    //         Game storage game = games[gameNumber];
+    //         lastIndex = game.tickets.length - 1;
+
+    //         bytes memory query;
+    //         query = abi.encodePacked(SafeIntCast.toString(lastIndex));
+    //         query = abi.encodePacked("random number between 0 and ", query);
+    //         string memory provableQuery = string(query);
+
+    //         emit LogNewProvableQuery("Provable query was sent, standing by for the answer...");
+    //         bytes32 queryId = provable_query("WolframAlpha", provableQuery);
+    //         pendingQueries[queryId] = true;
+    //     }
+    // }
 
     function generateRandomNumber() private {
-        if (provable_getPrice("WolframAlpha") > address(this).balance) {
-            emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
-        }
-        else {
-            uint lastIndex = 0;
-            Game storage game = games[gameNumber];
-            lastIndex = game.tickets.length - 1;
-
-            bytes memory query;
-            query = abi.encodePacked(SafeIntCast.toString(lastIndex));
-            query = abi.encodePacked("random number between 0 and ", query);
-            string memory provableQuery = string(query);
-
-            emit LogNewProvableQuery("Provable query was sent, standing by for the answer...");
-            bytes32 queryId = provable_query("WolframAlpha", provableQuery);
-            pendingQueries[queryId] = true;
-        }
+        
     }
 
     function startNextGame() public {
@@ -216,15 +214,15 @@ contract WinNgnt is GSNRecipient, usingProvable {
     }
 
     function fundRecipient() private {
-        uint relayBalance = _relayHub.balanceOf(address(this));
-        if(relayBalance < targetAmount){
-            uint amountDifference = targetAmount.sub(relayBalance);
-            if(address(this).balance > amountDifference){
-                _relayHub.depositFor.value(amountDifference)(address(this));
-            }else{
-                _relayHub.depositFor.value(address(this).balance)(address(this));
-            }
-        }
+        //uint relayBalance = _relayHub.balanceOf(address(this));
+        // if(relayBalance < targetAmount){
+        //     uint amountDifference = targetAmount.sub(relayBalance);
+        //     if(address(this).balance > amountDifference){
+        //         _relayHub.depositFor.value(amountDifference)(address(this));
+        //     }else{
+        //         _relayHub.depositFor.value(address(this).balance)(address(this));
+        //     }
+        // }
     }
 
     function resetGame() private {
@@ -237,31 +235,6 @@ contract WinNgnt is GSNRecipient, usingProvable {
         generateRandomNumber();
     }
 
-    function acceptRelayedCall(
-        address relay,
-        address from,
-        bytes calldata encodedFunction,
-        uint256 transactionFee,
-        uint256 gasPrice,
-        uint256 gasLimit,
-        uint256 nonce,
-        bytes calldata approvalData,
-        uint256 maxPossibleCharge
-    ) external view returns (uint256, bytes memory) {
-        bytes4 calldataSelector = LibBytes.readBytes4(encodedFunction, 0);
-        if (calldataSelector == this.buyTicket.selector) {
-            return _approveRelayedCall();
-        } else {
-            return _rejectRelayedCall(uint256(GSNErrorCodes.NOT_ALLOWED));
-        }
-    }
-
-    function _preRelayedCall(bytes memory context) internal returns (bytes32) {
-    }
-
-    function _postRelayedCall(bytes memory context, bool, uint256 actualCharge, bytes32) internal {
-    }
-
-    function  () external payable {
+    receive () external payable {
     }
 }
