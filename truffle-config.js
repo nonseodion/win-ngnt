@@ -43,18 +43,25 @@ module.exports = {
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
+      testnet: {
+        provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.binance.org:8545`),
+        network_id: 97,
+        confirmations: 10,
+        timeoutBlocks: 200,
+        skipDryRun: true
+      },
+      bsc: {
+        provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.binance.org`),
+        network_id: 56,
+        confirmations: 10,
+        timeoutBlocks: 200,
+        skipDryRun: true
+      },
       development: {
           host: "127.0.0.1",     // Localhost (default: none)
           port: 8545,            // Standard Ethereum port (default: none)
           network_id: "*",       // Any network (default: none)gas: 8500000,
           gas: 6500000,
-      },
-      test: {
-          host: "127.0.0.1",
-          port: 8545,
-          network_id: "*",
-          gas: 6500000,
-          websockets: true
       },
       rinkeby: {
           provider: function () {

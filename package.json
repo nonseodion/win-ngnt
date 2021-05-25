@@ -10,11 +10,14 @@
   "author": "NaijaSatoshi",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0",
+    "@chainlink/contracts": "^0.1.7",
+    "@opengsn/gsn": "^2.1.0",
+    "@openzeppelin/contracts": "^3.2.0",
     "@openzeppelin/gsn-provider": "^0.1.9",
     "@openzeppelin/network": "^0.4.1",
     "ethereumjs-tx": "^2.1.2",
     "ethers": "^4.0.44",
+    "gsn": "0.0.1",
     "truffle": "^5.0.43",
     "web3": "^1.2.4",
     "websocket": "^1.0.30"

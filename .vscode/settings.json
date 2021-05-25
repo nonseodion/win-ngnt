@@ -1,4 +1,4 @@
 {
-  "solidity.defaultCompiler": "remote",
-  "solidity.compileUsingRemoteVersion": "v0.6.2+commit.bacdbe57"
+  "solidity.compileUsingRemoteVersion": "v0.6.12+commit.27d51765",
+  "git.ignoreLimitWarning": true
 }
