@@ -47,9 +47,10 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
     mapping(bytes32 => bool) public pendingQueries;
 
     event GameEnded(uint gameNumber);
-    event BoughtTicket(address buyer, uint numOfTickets, uint totalTicketPrice);
-    event RandomNumberGenerated(uint16 randomNumber, uint gameNumber);
-    event WinnerSelected(address winner, uint amount, uint gameNumber);
+    event BoughtTicket(address indexed buyer, uint numOfTickets, uint totalTicketPrice);
+    event RandomNumberQuerySent(bytes32 queryId, uint indexed gameNumber);
+    event RandomNumberGenerated(uint16 randomNumber, uint indexed gameNumber);
+    event WinnerSelected(address winner, uint amount, uint indexed gameNumber);
 
 
 
@@ -122,13 +123,13 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
 
         emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
 
-        // if(games[gameNumber].tickets.length == maximumPurchasableTickets){
-        //     if(gameNumber.mod(5) == 0){
-        //         swapNgntForEth();
-        //         fundRecipient();
-        //     }
-        //     endGame();
-        // }
+        if(games[gameNumber].tickets.length == maximumPurchasableTickets){
+            // if(gameNumber.mod(5) == 0){
+            //     swapNgntForEth();
+            //     fundRecipient();
+            // }
+            endGame();
+        }
     }
 
     function numberOfTicketsLeft() external view returns (uint){
@@ -147,54 +148,22 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         return address(_ngnt);
     }
 
-    // function __callback(bytes32 queryId, string memory _result) isCalledByAProvableCallbackAddress(_msgSender())
-    // queryIdHasNotBeenProcessed(queryId) public
-    // {
-    //     if(games[gameNumber].tickets.length == maximumPurchasableTickets){
-    //         uint16 randomIndex = _result.toUint();
-    //         emit RandomNumberGenerated(randomIndex);
-    //         delete pendingQueries[queryId];
-
-    //         sendNgntToWinner(randomIndex);
-    //         resetGame();
-    //     }
-    // }
     function fulfillRandomness(bytes32 queryId, uint256 randomness)
         internal override 
         queryIdHasNotBeenProcessed(queryId){
         require(games[gameNumber].tickets.length == maximumPurchasableTickets);
         delete pendingQueries[queryId];
-        resetGame();
         uint16 randomIndex = uint16(randomness.mod(maximumPurchasableTickets) + 1);
 
         emit RandomNumberGenerated(randomIndex, gameNumber);
         sendNgntToWinner(randomIndex);
     }
 
-    // function generateRandomNumber() private {
-    //     if (provable_getPrice("WolframAlpha") > address(this).balance) {
-    //         emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
-    //     }
-    //     else {
-    //         uint lastIndex = 0;
-    //         Game storage game = games[gameNumber];
-    //         lastIndex = game.tickets.length - 1;
-
-    //         bytes memory query;
-    //         query = abi.encodePacked(SafeIntCast.toString(lastIndex));
-    //         query = abi.encodePacked("random number between 0 and ", query);
-    //         string memory provableQuery = string(query);
-
-    //         emit LogNewProvableQuery("Provable query was sent, standing by for the answer...");
-    //         bytes32 queryId = provable_query("WolframAlpha", provableQuery);
-    //         pendingQueries[queryId] = true;
-    //     }
-    // }
-
     function generateRandomNumber() private {
         require(LINK.balanceOf(address(this)) >= chainLinkFee, "Win");
         bytes32 queryId = requestRandomness(keyHash, chainLinkFee, block.timestamp);
         pendingQueries[queryId] = true;
+        emit RandomNumberQuerySent(queryId, gameNumber);
     }
 
     function startNextGame() public {
@@ -202,12 +171,13 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
     }
 
     function sendNgntToWinner(uint randomIndex) private {
-        Game storage game = games[gameNumber];
+        Game storage game = games[gameNumber-1];
         address winner = game.tickets[randomIndex];
         game.gameWinner = winner;
 
         uint amountWon = TOTAL_NGNT.mul(90).div(100);
         commission += TOTAL_NGNT.sub(amountWon);
+        resetGame();
         _ngnt.transfer(winner, amountWon);
 
         emit WinnerSelected(winner, amountWon, gameNumber);
