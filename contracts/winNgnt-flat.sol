@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: MIT
 // File: contracts/SafeStringCast.sol
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
 library SafeStringCast {
@@ -170,6 +169,8 @@ library SafeIntCast{
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
+// -License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
 /**
@@ -330,6 +331,7 @@ library SafeMath {
 
 // File: @opengsn/gsn/contracts/interfaces/IRelayRecipient.sol
 
+// -License-Identifier:MIT
 pragma solidity ^0.6.2;
 
 /**
@@ -369,7 +371,7 @@ abstract contract IRelayRecipient {
 
 // File: @opengsn/gsn/contracts/BaseRelayRecipient.sol
 
-
+// -License-Identifier:MIT
 // solhint-disable no-inline-assembly
 pragma solidity ^0.6.2;
 
@@ -438,7 +440,7 @@ abstract contract BaseRelayRecipient is IRelayRecipient {
 
 // File: @chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol
 
-
+// -License-Identifier: MIT
 pragma solidity ^0.6.0;
 
 /**
@@ -549,7 +551,7 @@ library SafeMathChainlink {
 
 // File: @chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol
 
-
+// -License-Identifier: MIT
 pragma solidity ^0.6.0;
 
 interface LinkTokenInterface {
@@ -569,7 +571,7 @@ interface LinkTokenInterface {
 
 // File: @chainlink/contracts/src/v0.6/VRFRequestIDBase.sol
 
-
+// -License-Identifier: MIT
 pragma solidity ^0.6.0;
 
 contract VRFRequestIDBase {
@@ -612,7 +614,7 @@ contract VRFRequestIDBase {
 
 // File: @chainlink/contracts/src/v0.6/VRFConsumerBase.sol
 
-
+// -License-Identifier: MIT
 pragma solidity ^0.6.0;
 
 
@@ -806,7 +808,7 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
 
 // File: contracts/WinNgnt.sol
 
-
+// -License-Identifier:MIT
 pragma solidity ^0.6.0;
 
 
@@ -854,9 +856,10 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
     mapping(bytes32 => bool) public pendingQueries;
 
     event GameEnded(uint gameNumber);
-    event BoughtTicket(address buyer, uint numOfTickets, uint totalTicketPrice);
-    event RandomNumberGenerated(uint16 randomNumber, uint gameNumber);
-    event WinnerSelected(address winner, uint amount, uint gameNumber);
+    event BoughtTicket(address indexed buyer, uint numOfTickets, uint totalTicketPrice);
+    event RandomNumberQuerySent(bytes32 queryId, uint indexed gameNumber);
+    event RandomNumberGenerated(uint16 randomNumber, uint indexed gameNumber);
+    event WinnerSelected(address winner, uint amount, uint indexed gameNumber);
 
 
 
@@ -929,13 +932,13 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
 
         emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
 
-        // if(games[gameNumber].tickets.length == maximumPurchasableTickets){
-        //     if(gameNumber.mod(5) == 0){
-        //         swapNgntForEth();
-        //         fundRecipient();
-        //     }
-        //     endGame();
-        // }
+        if(games[gameNumber].tickets.length == maximumPurchasableTickets){
+            // if(gameNumber.mod(5) == 0){
+            //     swapNgntForEth();
+            //     fundRecipient();
+            // }
+            endGame();
+        }
     }
 
     function numberOfTicketsLeft() external view returns (uint){
@@ -971,10 +974,10 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         queryIdHasNotBeenProcessed(queryId){
         require(games[gameNumber].tickets.length == maximumPurchasableTickets);
         delete pendingQueries[queryId];
-        resetGame();
         uint16 randomIndex = uint16(randomness.mod(maximumPurchasableTickets) + 1);
 
         emit RandomNumberGenerated(randomIndex, gameNumber);
+        resetGame();
         sendNgntToWinner(randomIndex);
     }
 
@@ -1002,6 +1005,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         require(LINK.balanceOf(address(this)) >= chainLinkFee, "Win");
         bytes32 queryId = requestRandomness(keyHash, chainLinkFee, block.timestamp);
         pendingQueries[queryId] = true;
+        emit RandomNumberQuerySent(queryId, gameNumber);
     }
 
     function startNextGame() public {
@@ -1009,7 +1013,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
     }
 
     function sendNgntToWinner(uint randomIndex) private {
-        Game storage game = games[gameNumber];
+        Game storage game = games[gameNumber-1];
         address winner = game.tickets[randomIndex];
         game.gameWinner = winner;
 

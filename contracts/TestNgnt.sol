@@ -5,6 +5,6 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract NGNT is ERC20("Naira Token", "NGNT"){
   constructor() public{
-    _mint(msg.sender, 1000000000000000000);
+    _mint(msg.sender, 1e7);
   }
 }
