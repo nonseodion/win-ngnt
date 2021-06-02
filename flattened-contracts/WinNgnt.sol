@@ -1,25 +1,8 @@
-// File: contracts/SafeStringCast.sol
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
-
-library SafeStringCast {
-    function toUint(string memory self) pure internal returns(uint16){
-        uint16 stringToUintCast = 0;
-        bytes memory byteString = bytes(self);
-        for(uint i = 0; i < byteString.length; i++){
-            uint8 byteToUintCast = uint8(byteString[i]);
-            if(byteToUintCast >= 48 && byteToUintCast <= 57){
-                stringToUintCast = stringToUintCast * 10 + (byteToUintCast - 48);
-            }
-        }
-
-        return stringToUintCast;
-    }
-}
-
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -95,83 +78,176 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-// File: contracts/interfaces/IUniswapExchange.sol
+// File: contracts/interfaces/IPancakeRouter01.sol
 
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier:MIT
+pragma solidity 0.7.6;
 
-// Solidity Interface
+interface IPancakeRouter01 {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
 
-interface IUniswapExchange {
-    // Address of ERC20 token sold on this exchange
-    function tokenAddress() external view returns (address token);
-    // Address of Uniswap Factory
-    function factoryAddress() external view returns (address factory);
-    // Provide Liquidity
-    function addLiquidity(uint256 min_liquidity, uint256 max_tokens, uint256 deadline) external payable returns (uint256);
-    function removeLiquidity(uint256 amount, uint256 min_eth, uint256 min_tokens, uint256 deadline) external returns (uint256, uint256);
-    // Get Prices
-    function getEthToTokenInputPrice(uint256 eth_sold) external view returns (uint256 tokens_bought);
-    function getEthToTokenOutputPrice(uint256 tokens_bought) external view returns (uint256 eth_sold);
-    function getTokenToEthInputPrice(uint256 tokens_sold) external view returns (uint256 eth_bought);
-    function getTokenToEthOutputPrice(uint256 eth_bought) external view returns (uint256 tokens_sold);
-    // Trade ETH to ERC20
-    function ethToTokenSwapInput(uint256 min_tokens, uint256 deadline) external payable returns (uint256  tokens_bought);
-    function ethToTokenTransferInput(uint256 min_tokens, uint256 deadline, address recipient) external payable returns (uint256  tokens_bought);
-    function ethToTokenSwapOutput(uint256 tokens_bought, uint256 deadline) external payable returns (uint256  eth_sold);
-    function ethToTokenTransferOutput(uint256 tokens_bought, uint256 deadline, address recipient) external payable returns (uint256  eth_sold);
-    // Trade ERC20 to ETH
-    function tokenToEthSwapInput(uint256 tokens_sold, uint256 min_eth, uint256 deadline) external returns (uint256  eth_bought);
-    function tokenToEthTransferInput(uint256 tokens_sold, uint256 min_eth, uint256 deadline, address recipient) external returns (uint256  eth_bought);
-    function tokenToEthSwapOutput(uint256 eth_bought, uint256 max_tokens, uint256 deadline) external returns (uint256  tokens_sold);
-    function tokenToEthTransferOutput(uint256 eth_bought, uint256 max_tokens, uint256 deadline, address recipient) external returns (uint256  tokens_sold);
-    // Trade ERC20 to ERC20
-    function tokenToTokenSwapInput(uint256 tokens_sold, uint256 min_tokens_bought, uint256 min_eth_bought, uint256 deadline, address token_addr) external returns (uint256  tokens_bought);
-    function tokenToTokenTransferInput(uint256 tokens_sold, uint256 min_tokens_bought, uint256 min_eth_bought, uint256 deadline, address recipient, address token_addr) external returns (uint256  tokens_bought);
-    function tokenToTokenSwapOutput(uint256 tokens_bought, uint256 max_tokens_sold, uint256 max_eth_sold, uint256 deadline, address token_addr) external returns (uint256  tokens_sold);
-    function tokenToTokenTransferOutput(uint256 tokens_bought, uint256 max_tokens_sold, uint256 max_eth_sold, uint256 deadline, address recipient, address token_addr) external returns (uint256  tokens_sold);
-    // Trade ERC20 to Custom Pool
-    function tokenToExchangeSwapInput(uint256 tokens_sold, uint256 min_tokens_bought, uint256 min_eth_bought, uint256 deadline, address exchange_addr) external returns (uint256  tokens_bought);
-    function tokenToExchangeTransferInput(uint256 tokens_sold, uint256 min_tokens_bought, uint256 min_eth_bought, uint256 deadline, address recipient, address exchange_addr) external returns (uint256  tokens_bought);
-    function tokenToExchangeSwapOutput(uint256 tokens_bought, uint256 max_tokens_sold, uint256 max_eth_sold, uint256 deadline, address exchange_addr) external returns (uint256  tokens_sold);
-    function tokenToExchangeTransferOutput(uint256 tokens_bought, uint256 max_tokens_sold, uint256 max_eth_sold, uint256 deadline, address recipient, address exchange_addr) external returns (uint256  tokens_sold);
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETH(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountToken, uint amountETH);
+    function removeLiquidityWithPermit(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETHWithPermit(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountToken, uint amountETH);
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
+    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
 
-    // ERC20 compatibility for liquidity tokens
-    function transfer(address _to, uint256 _value) external returns (bool);
-    function transferFrom(address _from, address _to, uint256 value) external returns (bool);
-    function approve(address _spender, uint256 _value) external returns (bool);
-    function allowance(address _owner, address _spender) external view returns (uint256);
-    function balanceOf(address _owner) external view returns (uint256);
-    function totalSupply() external view returns (uint256);
-    // Never use
-    function setup(address token_addr) external;
+    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
-// File: contracts/SafeIntCast.sol
+// File: contracts/interfaces/IPancakeRouter02.sol
 
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier:MIT
+pragma solidity 0.7.6;
 
-library SafeIntCast{
-    function toString(uint _base) internal pure returns (string memory) {
-        bytes memory _tmp = new bytes(32);
-        uint i;
-        for(i = 0;_base > 0;i++) {
-            _tmp[i] = byte(uint8((_base % 10) + 48));
-            _base /= 10;
-        }
 
-        bytes memory _real = new bytes(i--);
-        for(uint j = 0; j < _real.length; j++) {
-            _real[j] = _tmp[i--];
-        }
-        return string(_real);
-    }
+interface IPancakeRouter02 is IPancakeRouter01 {
+    function removeLiquidityETHSupportingFeeOnTransferTokens(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountETH);
+    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountETH);
+
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external payable;
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
+}
+
+// File: contracts/interfaces/IPegswap.sol
+
+// SPDX-License-Identifier:MIT
+pragma solidity 0.7.6;
+interface IPegswap{
+  /**
+   * @notice exchanges the source token for target token
+   * @param amount count of tokens being swapped
+   * @param source the token that is being given
+   * @param target the token that is being taken
+   */
+  function swap(
+    uint256 amount,
+    address source,
+    address target
+  )
+    external;
 }
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
-// -License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -188,6 +264,62 @@ pragma solidity ^0.6.0;
  */
 library SafeMath {
     /**
+     * @dev Returns the addition of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        uint256 c = a + b;
+        if (c < a) return (false, 0);
+        return (true, c);
+    }
+
+    /**
+     * @dev Returns the substraction of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b > a) return (false, 0);
+        return (true, a - b);
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) return (true, 0);
+        uint256 c = a * b;
+        if (c / a != b) return (false, 0);
+        return (true, c);
+    }
+
+    /**
+     * @dev Returns the division of two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b == 0) return (false, 0);
+        return (true, a / b);
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+     *
+     * _Available since v3.4._
+     */
+    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+        if (b == 0) return (false, 0);
+        return (true, a % b);
+    }
+
+    /**
      * @dev Returns the addition of two unsigned integers, reverting on
      * overflow.
      *
@@ -200,7 +332,6 @@ library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
-
         return c;
     }
 
@@ -215,24 +346,8 @@ library SafeMath {
      * - Subtraction cannot overflow.
      */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     *
-     * - Subtraction cannot overflow.
-     */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
+        require(b <= a, "SafeMath: subtraction overflow");
+        return a - b;
     }
 
     /**
@@ -246,21 +361,14 @@ library SafeMath {
      * - Multiplication cannot overflow.
      */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
+        if (a == 0) return 0;
         uint256 c = a * b;
         require(c / a == b, "SafeMath: multiplication overflow");
-
         return c;
     }
 
     /**
-     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * @dev Returns the integer division of two unsigned integers, reverting on
      * division by zero. The result is rounded towards zero.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
@@ -272,12 +380,51 @@ library SafeMath {
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
+        require(b > 0, "SafeMath: division by zero");
+        return a / b;
     }
 
     /**
-     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * reverting when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b > 0, "SafeMath: modulo by zero");
+        return a % b;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {trySub}.
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        return a - b;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers, reverting with custom message on
      * division by zero. The result is rounded towards zero.
+     *
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {tryDiv}.
      *
      * Counterpart to Solidity's `/` operator. Note: this function uses a
      * `revert` opcode (which leaves remaining gas untouched) while Solidity
@@ -289,31 +436,15 @@ library SafeMath {
      */
     function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
+        return a / b;
     }
 
     /**
      * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts when dividing by zero.
+     * reverting with custom message when dividing by zero.
      *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     *
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts with custom message when dividing by zero.
+     * CAUTION: This function is deprecated because it requires allocating memory for the error
+     * message unnecessarily. For custom revert reasons use {tryMod}.
      *
      * Counterpart to Solidity's `%` operator. This function uses a `revert`
      * opcode (which leaves remaining gas untouched) while Solidity uses an
@@ -324,15 +455,15 @@ library SafeMath {
      * - The divisor cannot be zero.
      */
     function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
+        require(b > 0, errorMessage);
         return a % b;
     }
 }
 
-// File: @opengsn/gsn/contracts/interfaces/IRelayRecipient.sol
+// File: @opengsn/contracts/src/interfaces/IRelayRecipient.sol
 
-// -License-Identifier:MIT
-pragma solidity ^0.6.2;
+// SPDX-License-Identifier: GPL-3.0-only
+pragma solidity >=0.7.6;
 
 /**
  * a contract must implement this interface in order to support relayed transaction.
@@ -360,20 +491,19 @@ abstract contract IRelayRecipient {
      * return the msg.data of this call.
      * if the call came through our trusted forwarder, then the real sender was appended as the last 20 bytes
      * of the msg.data - so this method will strip those 20 bytes off.
-     * otherwise, return `msg.data`
-     * should be used in the contract instead of msg.data, where the difference matters (e.g. when explicitly
-     * signing or hashing the
+     * otherwise (if the call was made directly and not through the forwarder), return `msg.data`
+     * should be used in the contract instead of msg.data, where this difference matters.
      */
     function _msgData() internal virtual view returns (bytes memory);
 
     function versionRecipient() external virtual view returns (string memory);
 }
 
-// File: @opengsn/gsn/contracts/BaseRelayRecipient.sol
+// File: @opengsn/contracts/src/BaseRelayRecipient.sol
 
-// -License-Identifier:MIT
+// SPDX-License-Identifier: GPL-3.0-only
 // solhint-disable no-inline-assembly
-pragma solidity ^0.6.2;
+pragma solidity >=0.7.6;
 
 
 /**
@@ -398,7 +528,7 @@ abstract contract BaseRelayRecipient is IRelayRecipient {
      * should be used in the contract anywhere instead of msg.sender
      */
     function _msgSender() internal override virtual view returns (address payable ret) {
-        if (msg.data.length >= 24 && isTrustedForwarder(msg.sender)) {
+        if (msg.data.length >= 20 && isTrustedForwarder(msg.sender)) {
             // At this point we know that the sender is a trusted forwarder,
             // so we trust that the last bytes of msg.data are the verified sender address.
             // extract sender address from the end of msg.data
@@ -419,29 +549,18 @@ abstract contract BaseRelayRecipient is IRelayRecipient {
      * signing or hashing the
      */
     function _msgData() internal override virtual view returns (bytes memory ret) {
-        if (msg.data.length >= 24 && isTrustedForwarder(msg.sender)) {
-            // At this point we know that the sender is a trusted forwarder,
-            // we copy the msg.data , except the last 20 bytes (and update the total length)
-            assembly {
-                let ptr := mload(0x40)
-                // copy only size-20 bytes
-                let size := sub(calldatasize(),20)
-                // structure RLP data as <offset> <length> <bytes>
-                mstore(ptr, 0x20)
-                mstore(add(ptr,32), size)
-                calldatacopy(add(ptr,64), 0, size)
-                return(ptr, add(size,64))
-            }
+        if (msg.data.length >= 20 && isTrustedForwarder(msg.sender)) {
+            return msg.data[0:msg.data.length-20];
         } else {
             return msg.data;
         }
     }
 }
 
-// File: @chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol
+// File: @chainlink/contracts/src/v0.7/vendor/SafeMathChainlink.sol
 
-// -License-Identifier: MIT
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -466,7 +585,16 @@ library SafeMathChainlink {
     * Requirements:
     * - Addition cannot overflow.
     */
-  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+  function add(
+    uint256 a,
+    uint256 b
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
+  {
     uint256 c = a + b;
     require(c >= a, "SafeMath: addition overflow");
 
@@ -482,7 +610,16 @@ library SafeMathChainlink {
     * Requirements:
     * - Subtraction cannot overflow.
     */
-  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+  function sub(
+    uint256 a,
+    uint256 b
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
+  {
     require(b <= a, "SafeMath: subtraction overflow");
     uint256 c = a - b;
 
@@ -498,7 +635,16 @@ library SafeMathChainlink {
     * Requirements:
     * - Multiplication cannot overflow.
     */
-  function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+  function mul(
+    uint256 a,
+    uint256 b
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
+  {
     // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
     // benefit is lost if 'b' is also tested.
     // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
@@ -523,7 +669,16 @@ library SafeMathChainlink {
     * Requirements:
     * - The divisor cannot be zero.
     */
-  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+  function div(
+    uint256 a,
+    uint256 b
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
+  {
     // Solidity only automatically asserts when dividing by 0
     require(b > 0, "SafeMath: division by zero");
     uint256 c = a / b;
@@ -543,36 +698,133 @@ library SafeMathChainlink {
     * Requirements:
     * - The divisor cannot be zero.
     */
-  function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+  function mod(
+    uint256 a,
+    uint256 b
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
+  {
     require(b != 0, "SafeMath: modulo by zero");
     return a % b;
   }
 }
 
-// File: @chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol
+// File: @chainlink/contracts/src/v0.7/interfaces/LinkTokenInterface.sol
 
-// -License-Identifier: MIT
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
 
 interface LinkTokenInterface {
-  function allowance(address owner, address spender) external view returns (uint256 remaining);
-  function approve(address spender, uint256 value) external returns (bool success);
-  function balanceOf(address owner) external view returns (uint256 balance);
-  function decimals() external view returns (uint8 decimalPlaces);
-  function decreaseApproval(address spender, uint256 addedValue) external returns (bool success);
-  function increaseApproval(address spender, uint256 subtractedValue) external;
-  function name() external view returns (string memory tokenName);
-  function symbol() external view returns (string memory tokenSymbol);
-  function totalSupply() external view returns (uint256 totalTokensIssued);
-  function transfer(address to, uint256 value) external returns (bool success);
-  function transferAndCall(address to, uint256 value, bytes calldata data) external returns (bool success);
-  function transferFrom(address from, address to, uint256 value) external returns (bool success);
+
+  function allowance(
+    address owner,
+    address spender
+  )
+    external
+    view
+    returns (
+      uint256 remaining
+    );
+
+  function approve(
+    address spender,
+    uint256 value
+  )
+    external
+    returns (
+      bool success
+    );
+
+  function balanceOf(
+    address owner
+  )
+    external
+    view
+    returns (
+      uint256 balance
+    );
+
+  function decimals()
+    external
+    view
+    returns (
+      uint8 decimalPlaces
+    );
+
+  function decreaseApproval(
+    address spender,
+    uint256 addedValue
+  )
+    external
+    returns (
+      bool success
+    );
+
+  function increaseApproval(
+    address spender,
+    uint256 subtractedValue
+  ) external;
+
+  function name()
+    external
+    view
+    returns (
+      string memory tokenName
+    );
+
+  function symbol()
+    external
+    view
+    returns (
+      string memory tokenSymbol
+    );
+
+  function totalSupply()
+    external
+    view
+    returns (
+      uint256 totalTokensIssued
+    );
+
+  function transfer(
+    address to,
+    uint256 value
+  )
+    external
+    returns (
+      bool success
+    );
+
+  function transferAndCall(
+    address to,
+    uint256 value,
+    bytes calldata data
+  )
+    external
+    returns (
+      bool success
+    );
+
+  function transferFrom(
+    address from,
+    address to,
+    uint256 value
+  )
+    external
+    returns (
+      bool success
+    );
+
 }
 
-// File: @chainlink/contracts/src/v0.6/VRFRequestIDBase.sol
+// File: @chainlink/contracts/src/v0.7/dev/VRFRequestIDBase.sol
 
-// -License-Identifier: MIT
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
 
 contract VRFRequestIDBase {
 
@@ -590,11 +842,19 @@ contract VRFRequestIDBase {
    * @param _requester Address of the requesting contract
    * @param _nonce User-specific nonce at the time of the request
    */
-  function makeVRFInputSeed(bytes32 _keyHash, uint256 _userSeed,
-    address _requester, uint256 _nonce)
-    internal pure returns (uint256)
+  function makeVRFInputSeed(
+    bytes32 _keyHash,
+    uint256 _userSeed,
+    address _requester,
+    uint256 _nonce
+  )
+    internal
+    pure
+    returns (
+      uint256
+    )
   {
-    return  uint256(keccak256(abi.encode(_keyHash, _userSeed, _requester, _nonce)));
+    return uint256(keccak256(abi.encode(_keyHash, _userSeed, _requester, _nonce)));
   }
 
   /**
@@ -607,15 +867,23 @@ contract VRFRequestIDBase {
    * @dev contract, but the one generated by makeVRFInputSeed
    */
   function makeRequestId(
-    bytes32 _keyHash, uint256 _vRFInputSeed) internal pure returns (bytes32) {
+    bytes32 _keyHash,
+    uint256 _vRFInputSeed
+  )
+    internal
+    pure
+    returns (
+      bytes32
+    )
+  {
     return keccak256(abi.encodePacked(_keyHash, _vRFInputSeed));
   }
 }
 
-// File: @chainlink/contracts/src/v0.6/VRFConsumerBase.sol
+// File: @chainlink/contracts/src/v0.7/dev/VRFConsumerBase.sol
 
-// -License-Identifier: MIT
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
 
 
 
@@ -731,8 +999,12 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
    * @param requestId The Id initially returned by requestRandomness
    * @param randomness the VRF output
    */
-  function fulfillRandomness(bytes32 requestId, uint256 randomness)
-    internal virtual;
+  function fulfillRandomness(
+    bytes32 requestId,
+    uint256 randomness
+  )
+    internal
+    virtual;
 
   /**
    * @notice requestRandomness initiates a request for VRF output given _seed
@@ -760,8 +1032,15 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
    * @dev concurrent requests. It is passed as the first argument to
    * @dev fulfillRandomness.
    */
-  function requestRandomness(bytes32 _keyHash, uint256 _fee, uint256 _seed)
-    internal returns (bytes32 requestId)
+  function requestRandomness(
+    bytes32 _keyHash,
+    uint256 _fee,
+    uint256 _seed
+  )
+    internal
+    returns (
+      bytes32 requestId
+    )
   {
     LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
     // This is the seed passed to VRFCoordinator. The oracle will mix this with
@@ -792,7 +1071,10 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
    *
    * @dev https://docs.chain.link/docs/link-token-contracts
    */
-  constructor(address _vrfCoordinator, address _link) public {
+  constructor(
+    address _vrfCoordinator,
+    address _link
+  ) {
     vrfCoordinator = _vrfCoordinator;
     LINK = LinkTokenInterface(_link);
   }
@@ -800,7 +1082,12 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
   // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
   // proof. rawFulfillRandomness then calls fulfillRandomness, after validating
   // the origin of the call
-  function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
+  function rawFulfillRandomness(
+    bytes32 requestId,
+    uint256 randomness
+  )
+    external
+  {
     require(msg.sender == vrfCoordinator, "Only VRFCoordinator can fulfill");
     fulfillRandomness(requestId, randomness);
   }
@@ -808,105 +1095,158 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
 
 // File: contracts/WinNgnt.sol
 
-// -License-Identifier:MIT
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier:MIT
+pragma solidity 0.7.6;
 
 
 
 
-//import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 
 
 
+contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
+    using SafeMath for uint256;
 
-contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
-    using SafeStringCast for string;
+    IERC20 public NGNT;
+    //ERC20 version of original ERC677 token
+    IERC20 public LINK_ERC20;
+    IPancakeRouter02 private pancakeswap;
+    IPegswap public pegswap;
 
-    IERC20 private _ngnt;
-    IUniswapExchange private _uniswap;
-    uint public TOTAL_NGNT = 0;
+    address public WBNB;
+    uint256 public TOTAL_NGNT = 0;
 
     struct Game {
-        uint gameNumber;
         address[] tickets;
         address gameWinner;
     }
 
-    uint public commission;
-    uint public gameNumber = 1;
-    uint public deadline = 1742680400;
-    uint public ticketPrice = 50000;
-    uint public minimumEther = 1 wei;
-    uint public maximumPurchasableTickets = 250;
-    uint public maximumTicketsPerAddress = 10;
-    uint public oneEther = 1000000000000000000;
-    uint public targetAmount = 1000000000000000000;
-    uint immutable internal chainLinkFee;
+    uint256 public commission;
+    uint256 public gameNumber = 1;
+    uint256 public deadline = 1742680400;
+    uint256 public ticketPrice = 50000;
+    uint256 public minimumEther = 1 wei;
+    uint256 public maximumPurchasableTickets = 250;
+    uint256 public maximumTicketsPerAddress = 10;
+    uint256 public targetAmount = 1000000000000000000;
+    uint256 internal chainLinkFee;
 
     bool public exchangeContractApproval;
 
-    string public override versionRecipient = "2.2.0+opengsn.sample.irelayrecipient";
+    string public override versionRecipient =
+        "2.2.0+opengsn.sample.irelayrecipient";
 
-    bytes32 immutable internal keyHash;
+    bytes32 internal keyHash;
 
-    mapping(uint => Game) public games;
-    mapping(address => uint) public addressTicketCount;
-    mapping(uint => mapping(address => uint)) public addressTicketCountPerGame;
+    mapping(uint256 => Game) public games;
+    mapping(address => uint256) public addressTicketCount;
+    mapping(uint256 => mapping(address => uint256))
+        public addressTicketCountPerGame;
     mapping(address => bool) public addressHasPaidGsnFee;
     mapping(bytes32 => bool) public pendingQueries;
 
-    event GameEnded(uint gameNumber);
-    event BoughtTicket(address indexed buyer, uint numOfTickets, uint totalTicketPrice);
-    event RandomNumberQuerySent(bytes32 queryId, uint indexed gameNumber);
-    event RandomNumberGenerated(uint16 randomNumber, uint indexed gameNumber);
-    event WinnerSelected(address winner, uint amount, uint indexed gameNumber);
+    event GameEnded(uint256 gameNumber);
+    event BoughtTicket(
+        address indexed buyer,
+        uint256 numOfTickets,
+        uint256 totalTicketPrice
+    );
+    event RandomNumberQuerySent(bytes32 queryId, uint256 indexed gameNumber);
+    event RandomNumberGenerated(
+        uint16 randomNumber,
+        uint256 indexed gameNumber
+    );
+    event WinnerSelected(
+        address winner,
+        uint256 amount,
+        uint256 indexed gameNumber
+    );
 
-
-
-    modifier atLeastOneTicket(uint numberOfTickets){
-        require(numberOfTickets >= 1, "WinNgnt:Cannot buy less than one ticket");
+    modifier atLeastOneTicket(uint256 numberOfTickets) {
+        require(
+            numberOfTickets >= 1,
+            "WinNgnt:Cannot buy less than one ticket"
+        );
         _;
     }
 
-    modifier ticketLimitNotExceed(uint numberOfTickets){
-        require((games[gameNumber].tickets.length + numberOfTickets) <= maximumPurchasableTickets, "WinNgnt:Total ticket per game limit exceeded");
+    modifier ticketLimitNotExceed(uint256 numberOfTickets) {
+        require(
+            (games[gameNumber].tickets.length + numberOfTickets) <=
+                maximumPurchasableTickets,
+            "WinNgnt:Total ticket per game limit exceeded"
+        );
         _;
     }
 
-    modifier maxTicketPerAddressLimitNotExceed(address _address, uint numberOfTickets){
-        require((addressTicketCountPerGame[gameNumber][_address] + numberOfTickets) <= maximumTicketsPerAddress, "WinNgnt:Maximum ticket limit per address exceeded");
+    modifier maxTicketPerAddressLimitNotExceed(
+        address _address,
+        uint256 numberOfTickets
+    ) {
+        require(
+            (addressTicketCountPerGame[gameNumber][_address] +
+                numberOfTickets) <= maximumTicketsPerAddress,
+            "WinNgnt:Maximum ticket limit per address exceeded"
+        );
         _;
     }
 
-    modifier queryIdHasNotBeenProcessed(bytes32 queryId){
-        require (pendingQueries[queryId] == true, "WinNgnt:QueryId has been processed");
+    modifier queryIdHasNotBeenProcessed(bytes32 queryId) {
+        require(
+            pendingQueries[queryId] == true,
+            "WinNgnt:QueryId has been processed"
+        );
         _;
     }
 
-    constructor(IERC20 ngnt, uint _maximumPurchasableTickets) 
+    modifier checkTrustedForwarder() {
+        if (msg.sender != _msgSender()) {
+            require(
+                msg.sender == trustedForwarder,
+                "WinNgnt:Not a trusted forwarder"
+            );
+        }
+        _;
+    }
+
+    constructor(
+        IERC20 _NGNT,
+        uint256 _maximumPurchasableTickets,
+        IPegswap _pegswap,
+        IERC20 _LINK_ERC20,
+        address _WBNB,
+        IPancakeRouter02 _pancakeswap
+    )
         VRFConsumerBase(
-            0xa555fC018435bef5A13C6c6870a9d4C11DEC329C, 
+            0xa555fC018435bef5A13C6c6870a9d4C11DEC329C,
             0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06
-            ) 
-        public {
-        _ngnt = ngnt;
-        //_uniswap = uniswap;
+        )
+    {
+        NGNT = _NGNT;
+        pegswap = _pegswap;
+        LINK_ERC20 = _LINK_ERC20;
+        WBNB = _WBNB;
+        pancakeswap = _pancakeswap;
         maximumPurchasableTickets = _maximumPurchasableTickets;
         keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
-        chainLinkFee = 0.1 * 1e18; 
+        chainLinkFee = 0.1 * 1e18;
     }
 
-    function buyTicket(uint numberOfTickets) atLeastOneTicket(numberOfTickets) ticketLimitNotExceed(numberOfTickets)
-    maxTicketPerAddressLimitNotExceed(_msgSender(), numberOfTickets)
-    external
+    function buyTicket(uint256 numberOfTickets)
+        external
+        atLeastOneTicket(numberOfTickets)
+        ticketLimitNotExceed(numberOfTickets)
+        maxTicketPerAddressLimitNotExceed(_msgSender(), numberOfTickets)
+        checkTrustedForwarder
     {
-        uint totalTicketPrice = ticketPrice.mul(numberOfTickets);
-        uint totalAddressTicketCount = addressTicketCount[_msgSender()];
-        uint totalAddressTicketCountPerGame = addressTicketCountPerGame[gameNumber][_msgSender()];
+        uint256 totalTicketPrice = ticketPrice.mul(numberOfTickets);
+        uint256 totalAddressTicketCount = addressTicketCount[_msgSender()];
+        uint256 totalAddressTicketCountPerGame =
+            addressTicketCountPerGame[gameNumber][_msgSender()];
 
         if (!addressHasPaidGsnFee[_msgSender()]) {
-            //uint gsnFee = _ngnt.gsnFee();
-            uint gsnFee = 5000;
+            //uint gsnFee = NGNT.gsnFee();
+            uint256 gsnFee = 5000;
             if (gsnFee <= 0) {
                 gsnFee = 5000;
             }
@@ -916,94 +1256,73 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         }
 
         TOTAL_NGNT += totalTicketPrice;
-        _ngnt.transferFrom(_msgSender(), address(this), totalTicketPrice);
+        NGNT.transferFrom(_msgSender(), address(this), totalTicketPrice);
 
         totalAddressTicketCount += numberOfTickets;
         totalAddressTicketCountPerGame += numberOfTickets;
-        
+
         addressTicketCount[_msgSender()] = totalAddressTicketCount;
-        addressTicketCountPerGame[gameNumber][_msgSender()] = totalAddressTicketCountPerGame;
+        addressTicketCountPerGame[gameNumber][
+            _msgSender()
+        ] = totalAddressTicketCountPerGame;
 
         Game storage game = games[gameNumber];
-        game.gameNumber = gameNumber;
-        for(uint i = 0; i < numberOfTickets; i++){
+        for (uint256 i = 0; i < numberOfTickets; i++) {
             game.tickets.push(_msgSender());
         }
 
         emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
 
-        if(games[gameNumber].tickets.length == maximumPurchasableTickets){
+        if (games[gameNumber].tickets.length == maximumPurchasableTickets) {
             // if(gameNumber.mod(5) == 0){
             //     swapNgntForEth();
             //     fundRecipient();
             // }
+            if (LINK.balanceOf(address(this)) < chainLinkFee) {
+                swapNGNTForLINK_ERC20(1e18);
+                swapLINK_ERC20ForERC677(1e17);
+            }
             endGame();
         }
     }
 
-    function numberOfTicketsLeft() external view returns (uint){
+    function numberOfTicketsLeft() external view returns (uint256) {
         Game storage game = games[gameNumber];
-        uint ticketsBought = game.tickets.length;
+        uint256 ticketsBought = game.tickets.length;
         return maximumPurchasableTickets.sub(ticketsBought);
     }
 
-    function numberOfTicketsPurchased() external view returns(uint){
+    function numberOfTicketsPurchased() external view returns (uint256) {
         Game storage game = games[gameNumber];
-        uint ticketsBought = game.tickets.length;
+        uint256 ticketsBought = game.tickets.length;
         return ticketsBought;
     }
 
-    function getNgntAddress() external view returns(address){
-        return address(_ngnt);
+    function getNgntAddress() external view returns (address) {
+        return address(NGNT);
     }
 
-    // function __callback(bytes32 queryId, string memory _result) isCalledByAProvableCallbackAddress(_msgSender())
-    // queryIdHasNotBeenProcessed(queryId) public
-    // {
-    //     if(games[gameNumber].tickets.length == maximumPurchasableTickets){
-    //         uint16 randomIndex = _result.toUint();
-    //         emit RandomNumberGenerated(randomIndex);
-    //         delete pendingQueries[queryId];
-
-    //         sendNgntToWinner(randomIndex);
-    //         resetGame();
-    //     }
-    // }
     function fulfillRandomness(bytes32 queryId, uint256 randomness)
-        internal override 
-        queryIdHasNotBeenProcessed(queryId){
+        internal
+        override
+        queryIdHasNotBeenProcessed(queryId)
+    {
         require(games[gameNumber].tickets.length == maximumPurchasableTickets);
         delete pendingQueries[queryId];
-        uint16 randomIndex = uint16(randomness.mod(maximumPurchasableTickets) + 1);
+        uint16 randomIndex =
+            uint16(randomness.mod(maximumPurchasableTickets) + 1);
 
         emit RandomNumberGenerated(randomIndex, gameNumber);
-        resetGame();
         sendNgntToWinner(randomIndex);
     }
 
-    // function generateRandomNumber() private {
-    //     if (provable_getPrice("WolframAlpha") > address(this).balance) {
-    //         emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
-    //     }
-    //     else {
-    //         uint lastIndex = 0;
-    //         Game storage game = games[gameNumber];
-    //         lastIndex = game.tickets.length - 1;
-
-    //         bytes memory query;
-    //         query = abi.encodePacked(SafeIntCast.toString(lastIndex));
-    //         query = abi.encodePacked("random number between 0 and ", query);
-    //         string memory provableQuery = string(query);
-
-    //         emit LogNewProvableQuery("Provable query was sent, standing by for the answer...");
-    //         bytes32 queryId = provable_query("WolframAlpha", provableQuery);
-    //         pendingQueries[queryId] = true;
-    //     }
-    // }
-
     function generateRandomNumber() private {
-        require(LINK.balanceOf(address(this)) >= chainLinkFee, "Win");
-        bytes32 queryId = requestRandomness(keyHash, chainLinkFee, block.timestamp);
+        require(
+            LINK.balanceOf(address(this)) >= chainLinkFee,
+            "WinNgnt: ERC677 LINK balance not enough for query"
+        );
+        bytes32 queryId =
+            requestRandomness(keyHash, chainLinkFee, block.timestamp);
         pendingQueries[queryId] = true;
         emit RandomNumberQuerySent(queryId, gameNumber);
     }
@@ -1012,30 +1331,18 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         generateRandomNumber();
     }
 
-    function sendNgntToWinner(uint randomIndex) private {
-        Game storage game = games[gameNumber-1];
+    function sendNgntToWinner(uint256 randomIndex) private {
+        Game storage game = games[gameNumber];
         address winner = game.tickets[randomIndex];
         game.gameWinner = winner;
 
-        uint amountWon = TOTAL_NGNT.mul(90).div(100);
+        uint256 amountWon = TOTAL_NGNT.mul(90).div(100);
         commission += TOTAL_NGNT.sub(amountWon);
-        _ngnt.transfer(winner, amountWon);
+        resetGame();
+        NGNT.transfer(winner, amountWon);
 
         emit WinnerSelected(winner, amountWon, gameNumber);
     }
-
-    // function swapNgntForEth() private {
-    //     if(address(this).balance < oneEther){
-    //         if(!exchangeContractApproval){
-    //             _ngnt.approve(address(_uniswap), 100000000000);
-    //             exchangeContractApproval = true;
-    //         }
-
-    //         uint tokenSold = commission;
-    //         _uniswap.tokenToEthSwapInput(tokenSold, minimumEther, deadline);
-    //         commission = 0;
-    //     }
-    // }
 
     function fundRecipient() private {
         //uint relayBalance = _relayHub.balanceOf(address(this));
@@ -1049,6 +1356,42 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         // }
     }
 
+    function swapNGNTForLINK_ERC20(uint256 _amount) private {
+        if (NGNT.allowance(address(this), address(pancakeswap)) < _amount) {
+            NGNT.approve(address(pancakeswap), type(uint256).max);
+        }
+
+        require(
+            NGNT.balanceOf(address(this)) >= _amount,
+            "WinNgnt: NGNT balance not enough for swap"
+        );
+        address[] memory path = new address[](3);
+        (path[0], path[1], path[2]) = (
+            address(NGNT),
+            WBNB,
+            address(LINK_ERC20)
+        );
+        pancakeswap.swapExactTokensForTokens(
+            _amount,
+            1,
+            path,
+            address(this),
+            deadline
+        );
+    }
+
+    function swapLINK_ERC20ForERC677(uint256 _amount) private {
+        if (LINK_ERC20.allowance(address(this), address(pegswap)) < _amount) {
+            LINK_ERC20.approve(address(pegswap), type(uint256).max);
+        }
+
+        require(
+            LINK_ERC20.balanceOf(address(this)) >= _amount,
+            "WinNgnt: ERC20 LINK balance not enough for swap"
+        );
+        pegswap.swap(_amount, address(LINK_ERC20), address(LINK));
+    }
+
     function resetGame() private {
         gameNumber++;
         TOTAL_NGNT = 0;
@@ -1059,10 +1402,9 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase{
         generateRandomNumber();
     }
 
-    function setForwarder(address _forwarder) public{
+    function setForwarder(address _forwarder) public {
         trustedForwarder = _forwarder;
     }
 
-    receive () external payable {
-    }
+    receive() external payable {}
 }
