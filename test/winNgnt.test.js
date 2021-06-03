@@ -1,10 +1,24 @@
-/* global artifacts before it assert contract xit */
+/* global artifacts before it assert contract it */
 const {
   constants: { MAX_UINT256 },
   expectRevert,
   expectEvent,
   BN,
 } = require("@openzeppelin/test-helpers");
+
+const {
+  bsc: {
+    ngnt,
+    pegswap,
+    linkERC20,
+    wbnb,
+    pancakeRouter,
+    vrfCoordinator,
+    linkERC677,
+  },
+  maximumPurchasableTickets,
+} = require("../params.json");
+
 // const { GsnTestEnvironment } = require("@opengsn/dev");
 // const { RelayProvider } = require("@opengsn/provider");
 // const Web3 = require("web3");
@@ -13,7 +27,6 @@ const winNgntContract = artifacts.require("WinNgnt");
 const ngntContract = artifacts.require("NGNT");
 
 // const paymasterAddress = process.env.ACCEPT_EVERYTHING_PAYMASTER;
-const ngntBscTestnetAddress = process.env.NGNT;
 // const Paymaster = artifacts.require("AcceptEverythingPaymaster");
 
 // const { paymasterAddress, forwarderAddress } = GsnTestEnvironment.loadDeployments();
@@ -21,71 +34,76 @@ const ngntBscTestnetAddress = process.env.NGNT;
 // const forwarderAddress = "0x04Bd619598C2D5eA209C40DB00376D9AF5CB8C3d";
 // const relayHub = "0x6656b70469Fb1c0779719d0aB3065a41e0fcc04B";
 
-contract("WinNgnt", async (accounts) => {
+contract("WinNgnt", async () => {
   let winNgntInstance;
   let ngntInstance;
-  const ticketPrice = 50000;
-  const [Buyer] = accounts;
+  const buyer = "0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF";
 
   before(async () => {
-    winNgntInstance = await winNgntContract.deployed();
-    ngntInstance = await ngntContract.at(ngntBscTestnetAddress);
-    await ngntInstance.approve(winNgntInstance.address, MAX_UINT256);
+    ngntInstance = await ngntContract.at(ngnt);
+    winNgntInstance = await winNgntContract.new(
+      ngnt,
+      maximumPurchasableTickets,
+      pegswap,
+      linkERC20,
+      wbnb,
+      pancakeRouter,
+      vrfCoordinator,
+      linkERC677,
+    );
+    await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, { from: buyer });
   });
 
-  xit("should let buyer buy a single ticket", async () => {
-    await winNgntInstance.buyTicket(1);
+  it("should let buyer buy a single ticket", async () => {
+    await winNgntInstance.buyTicket(1, { from: buyer });
     const ticketsBought = await winNgntInstance.numberOfTicketsPurchased();
     assert.equal(ticketsBought, 1, `${ticketsBought} tickets were bought`);
   });
 
-  xit("should not let anyone buy less than one ticket", async () => {
+  it("should not let anyone buy less than one ticket", async () => {
     await expectRevert.unspecified(winNgntInstance.buyTicket(0));
   });
 
-  xit("should not let anyone buy more tickets than address max", async () => {
+  it("should not let anyone buy more tickets than address max", async () => {
     const maxTickets = await winNgntInstance.maximumTicketsPerAddress();
     await expectRevert.unspecified(winNgntInstance.buyTicket(maxTickets));
   });
 
-  xit("should not let anyone buy more tickets than game max", async () => {
+  it("should not let anyone buy more tickets than game max", async () => {
     const maxTickets = await winNgntInstance.maximumPurchasableTickets();
     await expectRevert.unspecified(
-      winNgntInstance.buyTicket(maxTickets.toNumber() + 1)
+      winNgntInstance.buyTicket(maxTickets.toNumber() + 1),
     );
   });
 
   it("should deduct price of tickets bought", async () => {
-    const ngntBalBeforeBuy = await ngntInstance.balanceOf(Buyer);
-    const noOfTicketsBought = 4;
-    await winNgntInstance.buyTicket(noOfTicketsBought);
-    const ngntBalAfterBuy = await ngntInstance.balanceOf(Buyer);
+    const ngntBalBeforeBuy = await ngntInstance.balanceOf(buyer);
+    const ticketPrice = await winNgntInstance.ticketPrice();
+    const noOfTicketsBought = new BN(4);
+    await winNgntInstance.buyTicket(noOfTicketsBought, { from: buyer });
+    const ngntBalAfterBuy = await ngntInstance.balanceOf(buyer);
     const balDiff = ngntBalBeforeBuy.sub(ngntBalAfterBuy);
-    console.log(
-      ngntBalBeforeBuy.toString(),
-      ngntBalAfterBuy.toString(),
-      balDiff.toString(),
-    );
     assert.equal(
-      balDiff,
-      ticketPrice * noOfTicketsBought,
-      `${balDiff} is not equal to ${ticketPrice}`,
+      balDiff.toString(),
+      ticketPrice.mul(noOfTicketsBought).toString(),
+      "buyer balance not reduced appropriately",
     );
   });
 
-  xit("should set the Forwarder", async () => {
+  it("should set the Forwarder", async () => {
     const forwarder = "0x4Edfb2663b3F0DC627fd45C61d8a037848B6f86f";
     await winNgntInstance.setForwarder(forwarder);
     const trustedForwarder = await winNgntInstance.trustedForwarder();
     assert.equal(forwarder, trustedForwarder, "trusted forwarder not set");
   });
 
-  xit("should emit buy event", async () => {
-    const numOfTicketsBought = 4;
-    const ticketsPrice = numOfTicketsBought * ticketPrice;
-    const receipt = await winNgntInstance.buyTicket(numOfTicketsBought);
+  it("should emit buy event", async () => {
+    const numOfTicketsBought = new BN("4");
+    const ticketPrice = await winNgntInstance.ticketPrice();
+    const ticketsPrice = numOfTicketsBought.mul(ticketPrice);
+    const receipt = await winNgntInstance.buyTicket(numOfTicketsBought, { from: buyer });
     expectEvent(receipt, "BoughtTicket", {
-      buyer: Buyer,
+      buyer,
       numOfTickets: new BN(numOfTicketsBought),
       totalTicketPrice: new BN(ticketsPrice),
     });
