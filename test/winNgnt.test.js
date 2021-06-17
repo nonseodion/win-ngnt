@@ -10,11 +10,11 @@ const {
   bsc: {
     ngnt,
     pegswap,
-    linkERC20,
+    LINK_ERC20,
     wbnb,
     pancakeRouter,
     vrfCoordinator,
-    linkERC677,
+    LINK_ERC677,
   },
   maximumPurchasableTickets,
 } = require("../params.json");
@@ -45,13 +45,15 @@ contract("WinNgnt", async () => {
       ngnt,
       maximumPurchasableTickets,
       pegswap,
-      linkERC20,
+      LINK_ERC20,
       wbnb,
       pancakeRouter,
       vrfCoordinator,
-      linkERC677,
+      LINK_ERC677
     );
-    await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, { from: buyer });
+    await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, {
+      from: buyer,
+    });
   });
 
   it("should let buyer buy a single ticket", async () => {
@@ -72,7 +74,7 @@ contract("WinNgnt", async () => {
   it("should not let anyone buy more tickets than game max", async () => {
     const maxTickets = await winNgntInstance.maximumPurchasableTickets();
     await expectRevert.unspecified(
-      winNgntInstance.buyTicket(maxTickets.toNumber() + 1),
+      winNgntInstance.buyTicket(maxTickets.toNumber() + 1)
     );
   });
 
@@ -86,7 +88,7 @@ contract("WinNgnt", async () => {
     assert.equal(
       balDiff.toString(),
       ticketPrice.mul(noOfTicketsBought).toString(),
-      "buyer balance not reduced appropriately",
+      "buyer balance not reduced appropriately"
     );
   });
 
@@ -101,13 +103,37 @@ contract("WinNgnt", async () => {
     const numOfTicketsBought = new BN("4");
     const ticketPrice = await winNgntInstance.ticketPrice();
     const ticketsPrice = numOfTicketsBought.mul(ticketPrice);
-    const receipt = await winNgntInstance.buyTicket(numOfTicketsBought, { from: buyer });
+    const receipt = await winNgntInstance.buyTicket(numOfTicketsBought, {
+      from: buyer,
+    });
     expectEvent(receipt, "BoughtTicket", {
       buyer,
       numOfTickets: new BN(numOfTicketsBought),
       totalTicketPrice: new BN(ticketsPrice),
     });
   });
+
+  context("buy all tickets without GSN", async () => {
+    it("should emit NGNT to ERC_20 swap event", async () => {
+      
+    })
+
+    xit("should emit ERC_20 to ERC_677 swap event", async () => {
+
+    })
+
+    xit("should emit game ended event", async () => {
+
+    })
+
+    xit("should emit random number generation event", async() => {
+
+    })
+
+    xit("should select a winner", async() => {
+
+    })
+  })
 });
 
 // contract("WinNgnt with GSN", async (accounts) => {
