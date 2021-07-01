@@ -43,13 +43,14 @@ contract("WinNgnt", async () => {
     ngntInstance = await ngntContract.at(ngnt);
     winNgntInstance = await winNgntContract.new(
       ngnt,
-      maximumPurchasableTickets,
       pegswap,
       LINK_ERC20,
       wbnb,
       pancakeRouter,
       vrfCoordinator,
-      LINK_ERC677
+      LINK_ERC677,
+
+      maximumPurchasableTickets,
     );
     await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, {
       from: buyer,
@@ -102,7 +103,7 @@ contract("WinNgnt", async () => {
   it("should emit buy event", async () => {
     const numOfTicketsBought = new BN("4");
     const ticketPrice = await winNgntInstance.ticketPrice();
-    const ticketsPrice = numOfTicketsBought.mul(ticketPrice);
+    const ticketsPrice = numOfTicketsBought.mul(ticketPrice).sub(numOfTicketsBought.mul( new BN("5000")));
     const receipt = await winNgntInstance.buyTicket(numOfTicketsBought, {
       from: buyer,
     });
@@ -114,8 +115,19 @@ contract("WinNgnt", async () => {
   });
 
   context("buy all tickets without GSN", async () => {
-    it("should emit NGNT to ERC_20 swap event", async () => {
-      
+    before(async () => {
+      const numOfTicketsBought = new BN("249");
+      await winNgntInstance.buyTicket(numOfTicketsBought, {
+        from: buyer,
+      });
+    });
+
+    xit("should emit Pancakeswap swap event", async () => {
+      const receipt = await winNgntInstance.buyTicket(new BN("1"), {
+        from: buyer,
+      });
+
+      expectEvent(receipt, "Swap", {to: buyer})
     })
 
     xit("should emit ERC_20 to ERC_677 swap event", async () => {

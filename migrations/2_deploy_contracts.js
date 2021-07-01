@@ -1,7 +1,6 @@
 /* global artifacts */
 const WinNgnt = artifacts.require("WinNgnt");
 const Ngnt = artifacts.require("NGNT");
-const Paymaster = artifacts.require("AcceptEverythingPaymaster");
 const maximumPurchasableTicket = process.env.MAXIMUM_PURCHASABLE_TICKET;
 const pegswap = process.env.PEGSWAP;
 const ngnt = process.env.NGNT;
@@ -21,17 +20,16 @@ module.exports = async (deployer, network) => {
       wbnb,
       pancakeRouter,
     );
-  } else if (network === "development") {
-    await deployer.deploy(Paymaster);
-    await deployer.deploy(Ngnt);
-    await deployer.deploy(
-      WinNgnt,
-      Ngnt.address,
-      maximumPurchasableTicket,
-      pegswap,
-      linkErc20,
-      wbnb,
-      pancakeRouter,
-    );
-  }
+  } //else if (network === "development") {
+  //   await deployer.deploy(Ngnt);
+  //   await deployer.deploy(
+  //     WinNgnt,
+  //     Ngnt.address,
+  //     maximumPurchasableTicket,
+  //     pegswap,
+  //     linkErc20,
+  //     wbnb,
+  //     pancakeRouter,
+  //   );
+  // }
 };

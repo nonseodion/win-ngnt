@@ -1,0 +1,693 @@
+{
+	"compiler": {
+		"version": "0.7.6+commit.7338295f"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "contract IERC20",
+						"name": "_NGNT",
+						"type": "address"
+					},
+					{
+						"internalType": "contract IPegswap",
+						"name": "_pegswap",
+						"type": "address"
+					},
+					{
+						"internalType": "contract IERC20",
+						"name": "_LINK_ERC20",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_WBNB",
+						"type": "address"
+					},
+					{
+						"internalType": "contract IPancakeRouter02",
+						"name": "_pancakeswap",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_vrfCoordinator",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_LINK_ERC677",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_maximumPurchasableTickets",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "buyer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "numOfTickets",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "totalTicketPrice",
+						"type": "uint256"
+					}
+				],
+				"name": "BoughtTicket",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "gameNumber",
+						"type": "uint256"
+					}
+				],
+				"name": "GameEnded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint16",
+						"name": "randomNumber",
+						"type": "uint16"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "gameNumber",
+						"type": "uint256"
+					}
+				],
+				"name": "RandomNumberGenerated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "queryId",
+						"type": "bytes32"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "gameNumber",
+						"type": "uint256"
+					}
+				],
+				"name": "RandomNumberQuerySent",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "winner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "gameNumber",
+						"type": "uint256"
+					}
+				],
+				"name": "WinnerSelected",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "LINK_ERC20",
+				"outputs": [
+					{
+						"internalType": "contract IERC20",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "NGNT",
+				"outputs": [
+					{
+						"internalType": "contract IERC20",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "TOTAL_NGNT",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "WBNB",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "addressHasPaidGsnFee",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "addressTicketCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "addressTicketCountPerGame",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "numberOfTickets",
+						"type": "uint256"
+					}
+				],
+				"name": "buyTicket",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "commission",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "exchangeContractApproval",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "gameNumber",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "games",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "gameWinner",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getNgntAddress",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "forwarder",
+						"type": "address"
+					}
+				],
+				"name": "isTrustedForwarder",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "maximumPurchasableTickets",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "maximumTicketsPerAddress",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "minimumEther",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "numberOfTicketsLeft",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "numberOfTicketsPurchased",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "pegswap",
+				"outputs": [
+					{
+						"internalType": "contract IPegswap",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"name": "pendingQueries",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "requestId",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "randomness",
+						"type": "uint256"
+					}
+				],
+				"name": "rawFulfillRandomness",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_forwarder",
+						"type": "address"
+					}
+				],
+				"name": "setForwarder",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "startNextGame",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "targetAmount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "ticketPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "trustedForwarder",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "versionRecipient",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"isTrustedForwarder(address)": {
+					"notice": "return if the forwarder is trusted to forward relayed transactions to us. the forwarder is required to verify the sender's signature, and verify the call is not a replay."
+				}
+			},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/WinNgnt.sol": "WinNgnt"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@chainlink/contracts/src/v0.7/dev/VRFConsumerBase.sol": {
+			"keccak256": "0xfb55b175b0c8a440963d812491d281aed8ff9bc181edb96f4575d4718e5a66fe",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8692405016b31e06e577892d29fdd321ed972d325b55e058d11d6115ee6c498e",
+				"dweb:/ipfs/QmW6KwJ31QCCYFvb5cT2bJA6hdRrCXPApCJ5xAFFj2zNJs"
+			]
+		},
+		"@chainlink/contracts/src/v0.7/dev/VRFRequestIDBase.sol": {
+			"keccak256": "0x9d668e0943b57e2e7d33e6f1b38085da335252971ce9202a7de8a17afdad8511",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4aa0159cc8ba631e26358b6e8362a5776e039251a6a75d839001c22866452bd6",
+				"dweb:/ipfs/QmVC8DvJna6yo56FZtXnJ17Lj7sZV3x4mXqheiiXsiziaf"
+			]
+		},
+		"@chainlink/contracts/src/v0.7/interfaces/LinkTokenInterface.sol": {
+			"keccak256": "0xfa5c9db0efdd0fc8659b3d973929645883282e9a3e0bd3a95e625d06eded8cbc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c96843bd511f705c7847c826174e12aa23117dc2517f4802ef46a7c994533019",
+				"dweb:/ipfs/QmQ5MCvEJktQ9EExX7Mgg5ccUbKgkitkoYYamVwtr9MXAH"
+			]
+		},
+		"@chainlink/contracts/src/v0.7/vendor/SafeMathChainlink.sol": {
+			"keccak256": "0xdef991bae78444c98da33e88e81682001bb5bb9541ec19b1a05c19df8bbbff8b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://684404db5f34ead354c37a01566c3568a187903355211f97cb60118e868397fd",
+				"dweb:/ipfs/QmbZR3LxbVh1bBK6JhJGHRDAGn7GAtHVsB1FxxnDYRBQs8"
+			]
+		},
+		"@opengsn/contracts/src/BaseRelayRecipient.sol": {
+			"keccak256": "0xc52d38ab8f48b44bda064f803f2400e5d2d971969f1490430951e79135708fd2",
+			"license": "GPL-3.0-only",
+			"urls": [
+				"bzz-raw://21d5a88b0a45fd544fbc064bdf731ff2a2f918b4afb0b24d685727916c9206b3",
+				"dweb:/ipfs/QmfEyzDSkSVwNF9KEFmDvHzQvWJB2hpAeqQKzz8Dm1f8qB"
+			]
+		},
+		"@opengsn/contracts/src/interfaces/IRelayRecipient.sol": {
+			"keccak256": "0x6243d3a925653ed0bde57e9fae7fb87f12c58a2376b27ae23b53502322532e00",
+			"license": "GPL-3.0-only",
+			"urls": [
+				"bzz-raw://928801ac8ceac377f326cd48de8e0056db9a7f8767b60efee5dfca035f326702",
+				"dweb:/ipfs/QmYFkKXZcSVmmLNpDF1hvsLwAnhjmVSZuvEueaJgp1aVSg"
+			]
+		},
+		"@openzeppelin/contracts/math/SafeMath.sol": {
+			"keccak256": "0xe22a1fc7400ae196eba2ad1562d0386462b00a6363b742d55a2fd2021a58586f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4a635cec58fb4141a16cfd408f1a21ac944c335a3beaba541c35d2e95c04536f",
+				"dweb:/ipfs/QmXWcz73UenN1ji8jiWMbzxHjjfLbNQwLVKTEB5zNFE34K"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+			"keccak256": "0xbd74f587ab9b9711801baf667db1426e4a03fd2d7f15af33e0e0d0394e7cef76",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://2d0913dfbfce90d170df0d496ad7596c0778518e5fa7aba6c32562522546f66b",
+				"dweb:/ipfs/QmR6B8nLj2PJf5e1JWD9Nk7ErkAwkqUwadCnvE82FJr1RU"
+			]
+		},
+		"contracts/WinNgnt.sol": {
+			"keccak256": "0x16cb8d80f3d6279217da4e269235b8ff3e4a863e8c86da84ec30fc00b88628ae",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e84126f547442ec356163a709e659b1ec9c8a910964878f7c5d212179f9813f6",
+				"dweb:/ipfs/QmRkjzeeAEKWn1Gw6jXyEmvqh31kEZRuEe4w5xJ9u5MHiM"
+			]
+		},
+		"contracts/interfaces/IPancakeRouter01.sol": {
+			"keccak256": "0x2ef56c1bbb8eab4609df9b4e5a5fbc812f6e9b6e5fb92aa1bfff814bf1c8fc85",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c044877103a35d41984795359d7af8c3160e95fc7dd294a908a918a3d6f696b7",
+				"dweb:/ipfs/QmW56aBSH2Qqp268vm188Fr9HsEFKmXREkTZZCxfuWq435"
+			]
+		},
+		"contracts/interfaces/IPancakeRouter02.sol": {
+			"keccak256": "0x4c205db5e06571a1f78659ebe0b55d6b141ece715696d3312fc04ddb145f57cb",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://a1b1600f2f3251250460cdf57a0b9e9a37e9b0564380047d516d67373256a00c",
+				"dweb:/ipfs/QmauMpgn2inebegQ2va9zDcNKCVPSdg8QnhSkpz8mJWQPw"
+			]
+		},
+		"contracts/interfaces/IPegswap.sol": {
+			"keccak256": "0xd9c174969edd84a13bee63850841731d1d5c1e3bc8f581ebc957813e27c8217f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d562b50c979b0e26ec8dbe38f7c7a48c636223870b9f3c8ece03818349b4ef07",
+				"dweb:/ipfs/QmWFEqqnWR78vqG8jedVn2jkRCEUzUoiSmW7GmST9FrMGn"
+			]
+		}
+	},
+	"version": 1
+}

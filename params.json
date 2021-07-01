@@ -2,15 +2,15 @@
   "bsc": {
     "ngnt": "0xb7d9905edf8b7b093e3c74af8d6982d0f3d37762",
     "pegswap": "0x1FCc3B22955e76Ca48bF025f1A6993685975Bb9e",
-    "linkERC20": "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd",
+    "LINK_ERC20": "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd",
     "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     "pancakeRouter": "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F",
     "vrfCoordinator": "0x747973a5A2a4Ae1D3a8fDF5479f1514F65Db9C31",
-    "linkERC677": "0x404460C6A5EdE2D891e8297795264fDe62ADBB75"
+    "LINK_ERC677": "0x404460C6A5EdE2D891e8297795264fDe62ADBB75"
   },
   "bscTestnet":{
     "wbnb": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
     "pancakeRouter": "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3"
   },
-  "maximumPurchasableTickets": 100
+  "maximumPurchasableTickets": 250
 }
