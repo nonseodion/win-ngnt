@@ -36,6 +36,10 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
 
+  etherscan: {
+    apiKey: "0123456789abcdef0123456789abcdef" //replace this with your API key if you have one
+  },
+
   networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.

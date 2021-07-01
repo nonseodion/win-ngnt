@@ -34,7 +34,7 @@ const ngntContract = artifacts.require("NGNT");
 // const forwarderAddress = "0x04Bd619598C2D5eA209C40DB00376D9AF5CB8C3d";
 // const relayHub = "0x6656b70469Fb1c0779719d0aB3065a41e0fcc04B";
 
-contract("WinNgnt", async () => {
+contract("WinNgnt without GSN", async () => {
   let winNgntInstance;
   let ngntInstance;
   const buyer = "0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF";
@@ -114,36 +114,28 @@ contract("WinNgnt", async () => {
     });
   });
 
-  context("buy all tickets without GSN", async () => {
+  context("when all the tickets are bought", async () => {
+    let receipt;
+
     before(async () => {
-      const numOfTicketsBought = new BN("249");
-      await winNgntInstance.buyTicket(numOfTicketsBought, {
+      const ticketsPurchased = await winNgntInstance.numberOfTicketsPurchased();
+      const remainingTickets = (new BN(maximumPurchasableTickets-1)).sub(ticketsPurchased)
+      await winNgntInstance.buyTicket(remainingTickets, {
+        from: buyer,
+      });
+
+      receipt = await winNgntInstance.buyTicket(new BN("1"), {
         from: buyer,
       });
     });
 
-    xit("should emit Pancakeswap swap event", async () => {
-      const receipt = await winNgntInstance.buyTicket(new BN("1"), {
-        from: buyer,
-      });
 
-      expectEvent(receipt, "Swap", {to: buyer})
+    it("should emit gameEnded event", async () => {
+      expectEvent(receipt, "GameEnded", {gameNumber: new BN("1")})
     })
 
-    xit("should emit ERC_20 to ERC_677 swap event", async () => {
-
-    })
-
-    xit("should emit game ended event", async () => {
-
-    })
-
-    xit("should emit random number generation event", async() => {
-
-    })
-
-    xit("should select a winner", async() => {
-
+    it("should emit RandomNumberQuerySent event", async() => {
+      expectEvent(receipt, "RandomNumberQuerySent", {gameNumber: new BN("1")})
     })
   })
 });

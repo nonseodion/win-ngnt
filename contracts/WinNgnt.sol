@@ -29,14 +29,11 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     uint256 public commission;
     uint256 public gameNumber = 1;
     uint256 public ticketPrice = 50000;
-    uint256 public minimumEther = 1 wei;
     uint256 public maximumPurchasableTickets = 250;
-    uint256 public maximumTicketsPerAddress = 10;
-    uint256 public targetAmount = 1000000000000000000;
+    uint256 public maximumTicketsPerAddress = 250;
     uint256 gsnFee = 5000;
     uint256 internal chainLinkFee;
 
-    bool public exchangeContractApproval;
 
     string public override versionRecipient =
         "2.2.0+opengsn.sample.irelayrecipient";
@@ -153,8 +150,10 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
 
         NGNT.transferFrom(_msgSender(), address(this), totalTicketPrice);
-        totalTicketPrice = totalTicketPrice.sub(gsnFee.mul(numberOfTickets));
-        commission += gsnFee;
+        uint addCommission = gsnFee.mul(numberOfTickets);
+        totalTicketPrice = totalTicketPrice.sub(addCommission);
+        commission += addCommission;
+        
 
         TOTAL_NGNT += totalTicketPrice;
 
@@ -183,23 +182,20 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
             if (LINK_ERC677_Balance < chainLinkFee) {
                 
                 uint amountOut = chainLinkFee - LINK_ERC677_Balance;
-                uint LINK_ERC20_Balance = LINK_ERC20.balanceOf(address(this));
-                if(LINK_ERC20_Balance < chainLinkFee){
-                    address[] memory path = new address[](3);
-                    (path[0], path[1], path[2]) = (
-                        address(NGNT),
-                        WBNB,
-                        address(LINK_ERC20)
-                    );
-                    
-                    uint[] memory amountsIn = pancakeswap.getAmountsIn(amountOut, path);
 
-                    if(commission >= amountsIn[0]){
-                        swapNGNTForLINK_ERC20(amountsIn[0], amountOut, path);
-                    }
+                address[] memory path = new address[](3);
+                (path[0], path[1], path[2]) = (
+                    address(NGNT),
+                    WBNB,
+                    address(LINK_ERC20)
+                );
+                
+                uint[] memory amountsIn = pancakeswap.getAmountsIn(amountOut, path);
+
+                if(commission >= amountsIn[0]){
+                    swapNGNTForLINK_ERC20(amountsIn[0], amountOut, path);
+                    swapLINK_ERC20ForLINK_ERC677(amountOut);
                 }
-
-                swapLINK_ERC20ForLINK_ERC677(amountOut);
             }
             endGame();
         }
@@ -241,7 +237,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
             "WinNgnt: LINK_ERC677 balance not enough for query"
         );
         bytes32 queryId =
-            requestRandomness(keyHash, chainLinkFee, uint(blockhash(block.number.sub(100))));
+            requestRandomness(keyHash, chainLinkFee, block.timestamp);
         pendingQueries[queryId] = true;
         emit RandomNumberQuerySent(queryId, gameNumber);
     }
