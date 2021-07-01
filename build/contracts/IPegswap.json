@@ -39,22 +39,22 @@
     "absolutePath": "/home/nonseodion/Desktop/win-ngnt/contracts/interfaces/IPegswap.sol",
     "exportedSymbols": {
       "IPegswap": [
-        1254
+        1366
       ]
     },
-    "id": 1255,
+    "id": 1367,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1243,
+        "id": 1355,
         "literals": [
           "solidity",
           "0.7",
           ".6"
         ],
         "nodeType": "PragmaDirective",
-        "src": "31:22:3"
+        "src": "31:22:7"
       },
       {
         "abstract": false,
@@ -62,39 +62,39 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 1254,
+        "id": 1366,
         "linearizedBaseContracts": [
-          1254
+          1366
         ],
         "name": "IPegswap",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "documentation": {
-              "id": 1244,
+              "id": 1356,
               "nodeType": "StructuredDocumentation",
-              "src": "76:213:3",
+              "src": "76:213:7",
               "text": " @notice exchanges the source token for target token\n @param amount count of tokens being swapped\n @param source the token that is being given\n @param target the token that is being taken"
             },
             "functionSelector": "2b7f0923",
-            "id": 1253,
+            "id": 1365,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "swap",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 1251,
+              "id": 1363,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1246,
+                  "id": 1358,
                   "mutability": "mutable",
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1253,
-                  "src": "311:14:3",
+                  "scope": 1365,
+                  "src": "311:14:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -102,10 +102,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1245,
+                    "id": 1357,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "311:7:3",
+                    "src": "311:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -115,12 +115,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 1248,
+                  "id": 1360,
                   "mutability": "mutable",
                   "name": "source",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1253,
-                  "src": "331:14:3",
+                  "scope": 1365,
+                  "src": "331:14:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -128,10 +128,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1247,
+                    "id": 1359,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "331:7:3",
+                    "src": "331:7:7",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -142,12 +142,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 1250,
+                  "id": 1362,
                   "mutability": "mutable",
                   "name": "target",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1253,
-                  "src": "351:14:3",
+                  "scope": 1365,
+                  "src": "351:14:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -155,10 +155,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 1249,
+                    "id": 1361,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "351:7:3",
+                    "src": "351:7:7",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -168,33 +168,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "305:64:3"
+              "src": "305:64:7"
             },
             "returnParameters": {
-              "id": 1252,
+              "id": 1364,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "382:0:3"
+              "src": "382:0:7"
             },
-            "scope": 1254,
-            "src": "292:91:3",
+            "scope": 1366,
+            "src": "292:91:7",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 1255,
-        "src": "54:331:3"
+        "scope": 1367,
+        "src": "54:331:7"
       }
     ],
-    "src": "31:354:3"
+    "src": "31:354:7"
   },
   "legacyAST": {
     "attributes": {
       "absolutePath": "/home/nonseodion/Desktop/win-ngnt/contracts/interfaces/IPegswap.sol",
       "exportedSymbols": {
         "IPegswap": [
-          1254
+          1366
         ]
       },
       "license": "MIT"
@@ -208,9 +208,9 @@
             ".6"
           ]
         },
-        "id": 1243,
+        "id": 1355,
         "name": "PragmaDirective",
-        "src": "31:22:3"
+        "src": "31:22:7"
       },
       {
         "attributes": {
@@ -224,10 +224,10 @@
           "contractKind": "interface",
           "fullyImplemented": false,
           "linearizedBaseContracts": [
-            1254
+            1366
           ],
           "name": "IPegswap",
-          "scope": 1255
+          "scope": 1367
         },
         "children": [
           {
@@ -240,7 +240,7 @@
                 null
               ],
               "name": "swap",
-              "scope": 1254,
+              "scope": 1366,
               "stateMutability": "nonpayable",
               "virtual": false,
               "visibility": "external"
@@ -250,9 +250,9 @@
                 "attributes": {
                   "text": " @notice exchanges the source token for target token\n @param amount count of tokens being swapped\n @param source the token that is being given\n @param target the token that is being taken"
                 },
-                "id": 1244,
+                "id": 1356,
                 "name": "StructuredDocumentation",
-                "src": "76:213:3"
+                "src": "76:213:7"
               },
               {
                 "children": [
@@ -261,7 +261,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "amount",
-                      "scope": 1253,
+                      "scope": 1365,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -273,21 +273,21 @@
                           "name": "uint256",
                           "type": "uint256"
                         },
-                        "id": 1245,
+                        "id": 1357,
                         "name": "ElementaryTypeName",
-                        "src": "311:7:3"
+                        "src": "311:7:7"
                       }
                     ],
-                    "id": 1246,
+                    "id": 1358,
                     "name": "VariableDeclaration",
-                    "src": "311:14:3"
+                    "src": "311:14:7"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "source",
-                      "scope": 1253,
+                      "scope": 1365,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -300,21 +300,21 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 1247,
+                        "id": 1359,
                         "name": "ElementaryTypeName",
-                        "src": "331:7:3"
+                        "src": "331:7:7"
                       }
                     ],
-                    "id": 1248,
+                    "id": 1360,
                     "name": "VariableDeclaration",
-                    "src": "331:14:3"
+                    "src": "331:14:7"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "target",
-                      "scope": 1253,
+                      "scope": 1365,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -327,19 +327,19 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 1249,
+                        "id": 1361,
                         "name": "ElementaryTypeName",
-                        "src": "351:7:3"
+                        "src": "351:7:7"
                       }
                     ],
-                    "id": 1250,
+                    "id": 1362,
                     "name": "VariableDeclaration",
-                    "src": "351:14:3"
+                    "src": "351:14:7"
                   }
                 ],
-                "id": 1251,
+                "id": 1363,
                 "name": "ParameterList",
-                "src": "305:64:3"
+                "src": "305:64:7"
               },
               {
                 "attributes": {
@@ -348,24 +348,24 @@
                   ]
                 },
                 "children": [],
-                "id": 1252,
+                "id": 1364,
                 "name": "ParameterList",
-                "src": "382:0:3"
+                "src": "382:0:7"
               }
             ],
-            "id": 1253,
+            "id": 1365,
             "name": "FunctionDefinition",
-            "src": "292:91:3"
+            "src": "292:91:7"
           }
         ],
-        "id": 1254,
+        "id": 1366,
         "name": "ContractDefinition",
-        "src": "54:331:3"
+        "src": "54:331:7"
       }
     ],
-    "id": 1255,
+    "id": 1367,
     "name": "SourceUnit",
-    "src": "31:354:3"
+    "src": "31:354:7"
   },
   "compiler": {
     "name": "solc",
@@ -373,7 +373,7 @@
   },
   "networks": {},
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-06-02T17:31:41.484Z",
+  "updatedAt": "2021-07-01T14:31:27.487Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

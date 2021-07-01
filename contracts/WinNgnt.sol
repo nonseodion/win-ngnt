@@ -36,7 +36,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
 
     string public override versionRecipient =
-        "2.2.0+opengsn.sample.irelayrecipient";
+        "2.2.0+opengsn.winngnt.irelayrecipient";
 
     bytes32 internal keyHash;
 
@@ -100,16 +100,6 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         _;
     }
 
-    modifier checkTrustedForwarder() {
-        if (msg.sender != _msgSender()) {
-            require(
-                msg.sender == trustedForwarder,
-                "WinNgnt:Not a trusted forwarder"
-            );
-        }
-        _;
-    }
-
     constructor(
         NGNTContract _NGNT,
         IPegswap _pegswap,
@@ -118,6 +108,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         IPancakeRouter02 _pancakeswap,
         address _vrfCoordinator,
         address _LINK_ERC677,
+        address _trustedForwarder,
         
         uint256 _maximumPurchasableTickets
     )
@@ -134,6 +125,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         maximumPurchasableTickets = _maximumPurchasableTickets;
         keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
         chainLinkFee = 0.2 * 1e18;
+        trustedForwarder = _trustedForwarder;
     }
 
     function buyTicket(uint256 numberOfTickets)
@@ -141,7 +133,6 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         atLeastOneTicket(numberOfTickets)
         ticketLimitNotExceed(numberOfTickets)
         maxTicketPerAddressLimitNotExceed(_msgSender(), numberOfTickets)
-        checkTrustedForwarder
     {
         uint256 totalTicketPrice = ticketPrice.mul(numberOfTickets);
         uint256 totalAddressTicketCount = addressTicketCount[_msgSender()];
@@ -305,10 +296,6 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     function endGame() private {
         emit GameEnded(gameNumber);
         if(LINK_ERC677.balanceOf(address(this)) >= chainLinkFee) generateRandomNumber();
-    }
-
-    function setForwarder(address _forwarder) public {
-        trustedForwarder = _forwarder;
     }
 
     receive() external payable {}

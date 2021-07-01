@@ -15,24 +15,18 @@ const {
     pancakeRouter,
     vrfCoordinator,
     LINK_ERC677,
+    trustedForwarder,
+    relayHub
   },
   maximumPurchasableTickets,
 } = require("../params.json");
 
-// const { GsnTestEnvironment } = require("@opengsn/dev");
-// const { RelayProvider } = require("@opengsn/provider");
+const { RelayProvider } = require("@opengsn/provider");
 // const Web3 = require("web3");
 
 const winNgntContract = artifacts.require("WinNgnt");
 const ngntContract = artifacts.require("NGNT");
-
-// const paymasterAddress = process.env.ACCEPT_EVERYTHING_PAYMASTER;
-// const Paymaster = artifacts.require("AcceptEverythingPaymaster");
-
-// const { paymasterAddress, forwarderAddress } = GsnTestEnvironment.loadDeployments();
-// const paymasterAddress = "0x7EfE0180D6A4df94388D9023d39f3675f44eA915";
-// const forwarderAddress = "0x04Bd619598C2D5eA209C40DB00376D9AF5CB8C3d";
-// const relayHub = "0x6656b70469Fb1c0779719d0aB3065a41e0fcc04B";
+const paymasterContract = artifacts.require("WinNgntPaymaster");
 
 contract("WinNgnt without GSN", async () => {
   let winNgntInstance;
@@ -49,7 +43,7 @@ contract("WinNgnt without GSN", async () => {
       pancakeRouter,
       vrfCoordinator,
       LINK_ERC677,
-
+      trustedForwarder,
       maximumPurchasableTickets,
     );
     await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, {
@@ -93,13 +87,6 @@ contract("WinNgnt without GSN", async () => {
     );
   });
 
-  it("should set the Forwarder", async () => {
-    const forwarder = "0x4Edfb2663b3F0DC627fd45C61d8a037848B6f86f";
-    await winNgntInstance.setForwarder(forwarder);
-    const trustedForwarder = await winNgntInstance.trustedForwarder();
-    assert.equal(forwarder, trustedForwarder, "trusted forwarder not set");
-  });
-
   it("should emit buy event", async () => {
     const numOfTicketsBought = new BN("4");
     const ticketPrice = await winNgntInstance.ticketPrice();
@@ -140,40 +127,40 @@ contract("WinNgnt without GSN", async () => {
   })
 });
 
-// contract("WinNgnt with GSN", async (accounts) => {
-//   const [Alice] = accounts;
-//   before(async () => {
-//     // const paymaster = await Paymaster.deployed();
-//     // paymaster.setRelayHub(relayHub);
-//     // const paymasterAddress = paymaster.address;
-//     // await web3.eth.sendTransaction({
-//     //  from: Alice, to: paymasterAddress, value: "1000000000000000000" });
+contract("WinNgnt with GSN", async (accounts) => {
+  const [Alice] = accounts;
+  
+  before(async () => {
+    const paymasterInstance = await Paymaster.deployed();
+    paymasterInstance.setRelayHub(relayHub);
+    paymasterAddress = paymasterInstance.address
 
-//     const config = {
-//       paymasterAddress,
-//       loggerConfiguration: {
-//         logLevel: "debug",
-//       },
-//     };
+    const config = {
+      paymasterAddress,
+      loggerConfiguration: {
+        logLevel: "debug",
+      },
+    };
 
-//     const provider = await RelayProvider.newProvider({
-//       provider: web3.currentProvider,
-//       config,
-//     }).init();
-//     const relayProvider = new Web3(provider);
+    const provider = await RelayProvider.newProvider({
+      provider: web3.currentProvider,
+      config,
+    }).init();
+    const relayProvider = new Web3(provider);
+    console.log(relayProvider, provider)
 
-//     WinNgnt.setProvider(relayProvider);
-//     winNgnt = await WinNgnt.deployed();
-//     winNgnt.setForwarder(forwarderAddress);
+    // WinNgnt.setProvider(relayProvider);
+    // winNgnt = await WinNgnt.deployed();
+    // winNgnt.setForwarder(forwarderAddress);
 
-//     Ngnt.setProvider(relayProvider);
-//     ngnt = await Ngnt.deployed();
-//     await ngnt.approve(winNgnt.address, MAX_UINT256);
-//   });
+    // Ngnt.setProvider(relayProvider);
+    // ngnt = await Ngnt.deployed();
+    // await ngnt.approve(winNgnt.address, MAX_UINT256);
+  });
 
-//   it("should buy a ticket with zero gas", async () => {
-//     await winNgnt.numberOfTicketsPurchased.call();
-//     // const ticketsBought = await winNgnt.numberOfTicketsPurchased();
-//     // assert.equal(ticketsBought, 1, `${ticketsBought} tickets were bought`);
-//   });
-// });
+  // it("should buy a ticket with zero gas", async () => {
+  //   await winNgnt.numberOfTicketsPurchased.call();
+  //   // const ticketsBought = await winNgnt.numberOfTicketsPurchased();
+  //   // assert.equal(ticketsBought, 1, `${ticketsBought} tickets were bought`);
+  // });
+});
