@@ -30,7 +30,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     uint256 public gameNumber = 1;
     uint256 public ticketPrice = 50000;
     uint256 public maximumPurchasableTickets = 250;
-    uint256 public maximumTicketsPerAddress = 250;
+    uint256 public maximumTicketsPerAddress = 10;
     uint256 gsnFee = 5000;
     uint256 internal chainLinkFee;
 
@@ -143,13 +143,13 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         NGNT.transferFrom(_msgSender(), address(this), totalTicketPrice);
         uint addCommission = gsnFee.mul(numberOfTickets);
         totalTicketPrice = totalTicketPrice.sub(addCommission);
-        commission += addCommission;
+        commission = commission.add(addCommission);
         
 
-        TOTAL_NGNT += totalTicketPrice;
+        TOTAL_NGNT = TOTAL_NGNT.add(totalTicketPrice);
 
-        totalAddressTicketCount += numberOfTickets;
-        totalAddressTicketCountPerGame += numberOfTickets;
+        totalAddressTicketCount = totalAddressTicketCount.add(numberOfTickets);
+        totalAddressTicketCountPerGame = totalAddressTicketCountPerGame.add(numberOfTickets);
 
         addressTicketCount[_msgSender()] = totalAddressTicketCount;
         addressTicketCountPerGame[gameNumber][
@@ -243,7 +243,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         game.gameWinner = winner;
 
         uint256 amountWon = TOTAL_NGNT.mul(90).div(100);
-        commission += TOTAL_NGNT.sub(amountWon);
+        commission = NGNT.balanceOf(address(this)).sub(amountWon);
         resetGame();
         NGNT.transfer(winner, amountWon);
 
@@ -272,7 +272,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
             _amountIn,
             path,
             address(this),
-            block.timestamp + 20 minutes
+            block.timestamp.add(20 minutes)
         );
     }
 

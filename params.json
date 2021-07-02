@@ -8,7 +8,7 @@
     "vrfCoordinator": "0x747973a5A2a4Ae1D3a8fDF5479f1514F65Db9C31",
     "LINK_ERC677": "0x404460C6A5EdE2D891e8297795264fDe62ADBB75",
     "trustedForwarder": "0xeB230bF62267E94e657b5cbE74bdcea78EB3a5AB",
-    "relayHub": " 0xAa3E82b4c4093b4bA13Cb5714382C99ADBf750cA"
+    "relayHub": "0xAa3E82b4c4093b4bA13Cb5714382C99ADBf750cA"
   },
   "bscTestnet":{
     "wbnb": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
