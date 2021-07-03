@@ -171,19 +171,17 @@ contract("WinNgnt", async (accounts) => {
 
       before(async () => {
         const ticketsPurchased = await winNgntInstance.methods.numberOfTicketsPurchased().call();
-        const remainingTickets = (new BN(maximumPurchasableTickets-1)).sub(new BN(ticketsPurchased))
+        let remainingTickets = (new BN(maximumPurchasableTickets)).sub(new BN(ticketsPurchased))
 
         for(i = 0; i < 25 ; i++){
-          ngntInstance.transfer(accounts[0], new BN("500000"));
+          ngntInstance.transfer(accounts[i], new BN("500000"), {from: buyer});
 
-          console.log(accounts[i])
           ticketsToBuy = parseInt(remainingTickets) > 10 ? 10 : remainingTickets;
-          console.log(ticketsToBuy)
+
           await ngntInstance.approve(winNgntInstance.options.address, MAX_UINT256, {
             from: accounts[i],
           });
 
-          console.log(accounts[i])
           receipt = await winNgntInstance.methods.buyTicket(ticketsToBuy).send({from: accounts[i], useGSN: false});
           remainingTickets -= 10
           if (remainingTickets <= 0) return;
