@@ -194,6 +194,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_newTarget",
+						"type": "address"
+					}
+				],
+				"name": "changeTarget",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "getGasAndDataLimits",
 				"outputs": [
@@ -739,11 +752,11 @@
 			]
 		},
 		"contracts/Paymaster.sol": {
-			"keccak256": "0x29e7689b49f0882f822186b0a1297e64ecb3b412483c6af10b0d2e40250c0941",
+			"keccak256": "0xdb423e82c13a764867003b8a56b5f042a010841d79b2794ed52e10ddcb0d0373",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b32672d40c57873939d6e5b7c78c47d451e6cf9cc0420720c8bb5aad4dd8d5fd",
-				"dweb:/ipfs/Qmam6MyWPfYWwWfciNPWnPisybc9jQeKrCsMEmneJ53sbT"
+				"bzz-raw://a1ba997ba4919912f146cf141373140f784f8263aca36db20c2375cbc6990539",
+				"dweb:/ipfs/QmPtGHgMEtvFNdHVPMzT8PCrWrGX5wNhPK9a1nk2cK8t3f"
 			]
 		}
 	},

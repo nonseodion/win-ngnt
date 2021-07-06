@@ -9,6 +9,9 @@
     "LINK_ERC677": "0x404460C6A5EdE2D891e8297795264fDe62ADBB75",
     "trustedForwarder": "0xeB230bF62267E94e657b5cbE74bdcea78EB3a5AB",
     "relayHub": "0xAa3E82b4c4093b4bA13Cb5714382C99ADBf750cA",
+    "paymaster": "0x01a5a06C5Ba6E5f8FC9CB060492fae1b3d03c69d",
+    "chainLinkFee": "200000000000000000",
+    "maximumPurchasableTickets": 250
   },
   "bscTestnet":{
     "wbnb": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
@@ -20,7 +23,9 @@
     "LINK_ERC20":"0xfEf6985E5f60e86732b48A8c4b3Ac17D3aA92C7E",
     "LINK_ERC677": "0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06",
     "vrfCoordinator":"0xa555fC018435bef5A13C6c6870a9d4C11DEC329C",
-    "winngnt": "0x1Fcc40d835852B93817aed22Eb7730f2a669fEf7"
-  },
-  "maximumPurchasableTickets": 250
+    "winngnt": "0x1d8be8d1D688E040ed7d8561ca72702D672be47F",
+    "paymaster": "0x1401aB5802616bEb0772Bad8449b130307345aB2",
+    "chainLinkFee": "100000000000000000",
+    "maximumPurchasableTickets": 10
+  }
 }
