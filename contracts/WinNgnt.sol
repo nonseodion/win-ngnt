@@ -8,14 +8,14 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@opengsn/contracts/src/interfaces/IRelayHub.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@chainlink/contracts/src/v0.7/dev/VRFConsumerBase.sol";
-import "./tokens/NGNT.sol";
 
 contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     using SafeMath for uint256;
 
-    NGNTContract public NGNT;
+    IERC20 public NGNT;
     //ERC20 version of original ERC677 token
     IERC20 public LINK_ERC20;
+    LinkTokenInterface private LINK_ERC677;
     IPancakeRouter02 private pancakeswap;
     IPegswap public pegswap;
     IRelayHub public relayHub;
@@ -106,7 +106,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     }
 
     constructor(
-        NGNTContract _NGNT,
+        IERC20 _NGNT,
         IPegswap _pegswap,
         IERC20 _LINK_ERC20,
         address _WBNB,
@@ -127,6 +127,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         NGNT = _NGNT;
         pegswap = _pegswap;
         LINK_ERC20 = _LINK_ERC20;
+        LINK_ERC677 = LinkTokenInterface(_LINK_ERC677);
         WBNB = _WBNB;
         pancakeswap = _pancakeswap;
         maximumPurchasableTickets = _maximumPurchasableTickets;
