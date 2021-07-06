@@ -20,6 +20,7 @@ const {
     relayHub,
     chainLinkFee,
     maximumPurchasableTickets,
+    buyer
   }
 } = require("./utils/params.json");
 
@@ -33,7 +34,6 @@ contract("WinNgnt", async (accounts) => {
   [Alice] = accounts;
   let winNgntInstance;
   let ngntInstance;
-  const buyer = "0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF";
   const contractOptions = { gasPrice: 20000000000, gas: 6721975 };
 
   before(async () => {

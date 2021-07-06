@@ -11,7 +11,8 @@
     "relayHub": "0xAa3E82b4c4093b4bA13Cb5714382C99ADBf750cA",
     "paymaster": "0x01a5a06C5Ba6E5f8FC9CB060492fae1b3d03c69d",
     "chainLinkFee": "200000000000000000",
-    "maximumPurchasableTickets": 250
+    "maximumPurchasableTickets": 250,
+    "buyer": "0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF"
   },
   "bscTestnet":{
     "wbnb": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
