@@ -7,7 +7,7 @@ const {
 } = require("@openzeppelin/test-helpers");
 
 const {
-  bsc: {
+  bscTestnet: {
     ngnt,
     pegswap,
     LINK_ERC20,
@@ -33,14 +33,14 @@ contract("WinNgnt", async (accounts) => {
   [Alice] = accounts;
   let winNgntInstance;
   let ngntInstance;
-  const buyer = "0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF";
+  const buyer = accounts[0] //"0xef7d1352c49a1DE2E0cea1CAa644032238e0f5AF";
   const contractOptions = { gasPrice: 20000000000, gas: 6721975 };
 
   before(async () => {
     ngntInstance = await ngntContract.at(ngnt);
-    const paymasterInstance = await paymasterContract.new();
-    await paymasterInstance.setRelayHub(relayHub);
-    paymasterAddress = paymasterInstance.address;
+    // const paymasterInstance = await paymasterContract.new();
+    // await paymasterInstance.setRelayHub(relayHub);
+    //paymasterAddress = paymasterInstance.address;
 
     const config = {
       paymasterAddress,
@@ -66,14 +66,13 @@ contract("WinNgnt", async (accounts) => {
       maximumPurchasableTickets
     );
 
-    const relayHubInstance = new web3.eth.Contract(
-      relayHubContract.abi,
-      relayHub,
-      contractOptions
-    );
-    await relayHubInstance.methods
-      .depositFor(paymasterAddress)
-      .send({ from: Alice, value: web3.utils.toWei("2"), useGSN: false });
+    // const relayHubInstance = new web3.eth.Contract(
+    //   relayHubContract.abi,
+    //   relayHub,
+    // );
+    // await relayHubInstance.methods
+    //   .depositFor(paymasterAddress)
+    //   .send({ from: Alice, value: web3.utils.toWei("2"), useGSN: false });
 
     await ngntInstance.approve(winNgntInstance.address, MAX_UINT256, {
       from: buyer,
@@ -101,7 +100,7 @@ contract("WinNgnt", async (accounts) => {
       );
     });
 
-    it("should not let anyone buy less than one ticket", async () => {
+    xit("should not let anyone buy less than one ticket", async () => {
       await expectRevert.unspecified(
         winNgntInstance.methods
           .buyTicket(0)
@@ -109,7 +108,7 @@ contract("WinNgnt", async (accounts) => {
       );
     });
 
-    it("should not let anyone buy more tickets than address max", async () => {
+    xit("should not let anyone buy more tickets than address max", async () => {
       const maxTickets = await winNgntInstance.methods
         .maximumTicketsPerAddress()
         .call();
@@ -120,7 +119,7 @@ contract("WinNgnt", async (accounts) => {
       );
     });
 
-    it("should not let anyone buy more tickets than game max", async () => {
+    xit("should not let anyone buy more tickets than game max", async () => {
       const maxTickets = await winNgntInstance.methods
         .maximumPurchasableTickets()
         .call();
@@ -131,7 +130,7 @@ contract("WinNgnt", async (accounts) => {
       );
     });
 
-    it("should deduct price of tickets bought", async () => {
+    xit("should deduct price of tickets bought", async () => {
       const ngntBalBeforeBuy = await ngntInstance.balanceOf(buyer);
       const ticketPrice = await winNgntInstance.methods.ticketPrice().call();
       const noOfTicketsBought = new BN(4);
@@ -150,7 +149,7 @@ contract("WinNgnt", async (accounts) => {
       );
     });
 
-    it("should emit buy event", async () => {
+    xit("should emit buy event", async () => {
       const numOfTicketsBought = new BN("4");
       const ticketPrice = await winNgntInstance.methods.ticketPrice().call();
       const ticketsPrice = numOfTicketsBought
@@ -166,36 +165,36 @@ contract("WinNgnt", async (accounts) => {
       });
     });
 
-    context("when all the tickets are bought", async () => {
-      let receipt;
+    // context("when all the tickets are bought", async () => {
+    //   let receipt;
 
-      before(async () => {
-        const ticketsPurchased = await winNgntInstance.methods.numberOfTicketsPurchased().call();
-        let remainingTickets = (new BN(maximumPurchasableTickets)).sub(new BN(ticketsPurchased))
+    //   before(async () => {
+    //     const ticketsPurchased = await winNgntInstance.methods.numberOfTicketsPurchased().call();
+    //     let remainingTickets = (new BN(maximumPurchasableTickets)).sub(new BN(ticketsPurchased))
 
-        for(i = 0; i < 25 ; i++){
-          ngntInstance.transfer(accounts[i], new BN("500000"), {from: buyer});
+    //     for(i = 0; i < 25 ; i++){
+    //       ngntInstance.transfer(accounts[i], new BN("500000"), {from: buyer});
 
-          ticketsToBuy = parseInt(remainingTickets) > 10 ? 10 : remainingTickets;
+    //       ticketsToBuy = parseInt(remainingTickets) > 10 ? 10 : remainingTickets;
 
-          await ngntInstance.approve(winNgntInstance.options.address, MAX_UINT256, {
-            from: accounts[i],
-          });
+    //       await ngntInstance.approve(winNgntInstance.options.address, MAX_UINT256, {
+    //         from: accounts[i],
+    //       });
 
-          receipt = await winNgntInstance.methods.buyTicket(ticketsToBuy).send({from: accounts[i], useGSN: false});
-          remainingTickets -= 10
-          if (remainingTickets <= 0) return;
-        }
-      });
+    //       receipt = await winNgntInstance.methods.buyTicket(ticketsToBuy).send({from: accounts[i], useGSN: false});
+    //       remainingTickets -= 10
+    //       if (remainingTickets <= 0) return;
+    //     }
+    //   });
 
-      it("should emit gameEnded event", async () => {
-        expectEvent(receipt, "GameEnded", {gameNumber: new BN("1")})
-      })
+    //   it("should emit gameEnded event", async () => {
+    //     expectEvent(receipt, "GameEnded", {gameNumber: new BN("1")})
+    //   })
 
-      it("should emit RandomNumberQuerySent event", async() => {
-        expectEvent(receipt, "RandomNumberQuerySent", {gameNumber: new BN("1")})
-      })
-    })
+    //   it("should emit RandomNumberQuerySent event", async() => {
+    //     expectEvent(receipt, "RandomNumberQuerySent", {gameNumber: new BN("1")})
+    //   })
+    // })
   });
 
   // context("With GSN", async () => {

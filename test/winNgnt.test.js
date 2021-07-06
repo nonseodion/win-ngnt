@@ -175,10 +175,11 @@ contract("WinNgnt", async (accounts) => {
       await ngntInstance.transfer(Alice, 1000000, {
           from: buyer,
         });
-
+        console.log((await relayHubInstance.methods.balanceOf(paymasterAddress).call()).toString())
       winNgntInstance = new web3.eth.Contract(
         winNgntContract.abi,
-        winNgntInstance.address
+        winNgntInstance.address,
+        contractOptions
       );
     });
 

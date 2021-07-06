@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IPancakeRouter02.sol";
 import "./interfaces/IPegswap.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@opengsn/contracts/src/interfaces/IRelayHub.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 import "@chainlink/contracts/src/v0.7/dev/VRFConsumerBase.sol";
 import "./tokens/NGNT.sol";
@@ -17,23 +18,27 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     IERC20 public LINK_ERC20;
     IPancakeRouter02 private pancakeswap;
     IPegswap public pegswap;
+    IRelayHub public relayHub;
 
     address public WBNB;
-    uint256 public TOTAL_NGNT = 0;
+    address private paymaster;
 
     struct Game {
         address[] tickets;
         address gameWinner;
     }
 
-    uint256 public commission;
+    uint256 public commission = 0;
     uint256 public gameNumber = 1;
     uint256 public ticketPrice = 50000;
-    uint256 public maximumPurchasableTickets = 250;
+    uint256 public maximumPurchasableTickets;
     uint256 public maximumTicketsPerAddress = 10;
+    uint256 public TOTAL_NGNT;
     uint256 gsnFee = 5000;
     uint256 internal chainLinkFee;
 
+    address[] path_NGNTBNB;
+    address[] path_NGNTLINKERC20;
 
     string public override versionRecipient =
         "2.2.0+opengsn.winngnt.irelayrecipient";
@@ -49,7 +54,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     event GameEnded(uint256 gameNumber);
     event BoughtTicket(
         address indexed buyer,
-        uint256 numOfTickets,// SPDX-License-Identifier:MIT
+        uint256 numOfTickets,
         uint256 totalTicketPrice
     );
     event RandomNumberQuerySent(bytes32 queryId, uint256 indexed gameNumber);
@@ -106,10 +111,12 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         IERC20 _LINK_ERC20,
         address _WBNB,
         IPancakeRouter02 _pancakeswap,
+        IRelayHub _relayHub,
         address _vrfCoordinator,
         address _LINK_ERC677,
         address _trustedForwarder,
-        
+        address _paymaster,
+        uint256 _chainLinkFee,
         uint256 _maximumPurchasableTickets
     )
         VRFConsumerBase(
@@ -124,8 +131,15 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         pancakeswap = _pancakeswap;
         maximumPurchasableTickets = _maximumPurchasableTickets;
         keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
-        chainLinkFee = 0.2 * 1e18;
+        chainLinkFee = _chainLinkFee;
         trustedForwarder = _trustedForwarder;
+        relayHub = _relayHub;
+        paymaster = _paymaster;
+        path_NGNTLINKERC20 = [address(NGNT), WBNB, address(LINK_ERC20)];
+        path_NGNTBNB = [address(NGNT), WBNB];
+
+        NGNT.approve(address(pancakeswap), type(uint256).max);
+        LINK_ERC20.approve(address(pegswap), type(uint256).max);
     }
 
     function buyTicket(uint256 numberOfTickets)
@@ -142,9 +156,8 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
         NGNT.transferFrom(_msgSender(), address(this), totalTicketPrice);
         uint addCommission = gsnFee.mul(numberOfTickets);
-        totalTicketPrice = totalTicketPrice.sub(addCommission);
         commission = commission.add(addCommission);
-        
+        totalTicketPrice = totalTicketPrice.sub(addCommission);
 
         TOTAL_NGNT = TOTAL_NGNT.add(totalTicketPrice);
 
@@ -164,32 +177,28 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
 
         if (games[gameNumber].tickets.length == maximumPurchasableTickets) {
-            // if(gameNumber.mod(5) == 0){
-            //     swapNgntForEth();
-            //     fundRecipient();
-            // }
 
             uint LINK_ERC677_Balance = LINK_ERC677.balanceOf(address(this));
             if (LINK_ERC677_Balance < chainLinkFee) {
                 
                 uint amountOut = chainLinkFee - LINK_ERC677_Balance;
-
-                address[] memory path = new address[](3);
-                (path[0], path[1], path[2]) = (
-                    address(NGNT),
-                    WBNB,
-                    address(LINK_ERC20)
-                );
                 
-                uint[] memory amountsIn = pancakeswap.getAmountsIn(amountOut, path);
+                uint[] memory amountsIn = pancakeswap.getAmountsIn(amountOut, path_NGNTLINKERC20);
 
                 if(commission >= amountsIn[0]){
-                    swapNGNTForLINK_ERC20(amountsIn[0], amountOut, path);
+                    commission = commission.sub(amountsIn[0]);
+                    swapNGNTForLINK_ERC20(amountsIn[0], amountOut);
                     swapLINK_ERC20ForLINK_ERC677(amountOut);
+                }
+
+                if(gameNumber.mod(5) == 0){
+                    swapNGNTForBNB();
+                    relayHub.depositFor{value: address(this).balance}(paymaster);
                 }
             }
             endGame();
         }
+        commission = NGNT.balanceOf(address(this)).sub(TOTAL_NGNT);
     }
 
     function numberOfTicketsLeft() external view returns (uint256) {
@@ -250,42 +259,38 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         emit WinnerSelected(winner, amountWon, gameNumber);
     }
 
-    function fundRecipient() private {
-        //uint relayBalance = _relayHub.balanceOf(address(this));
-        // if(relayBalance < targetAmount){
-        //     uint amountDifference = targetAmount.sub(relayBalance);
-        //     if(address(this).balance > amountDifference){
-        //         _relayHub.depositFor.value(amountDifference)(address(this));
-        //     }else{
-        //         _relayHub.depositFor.value(address(this).balance)(address(this));
-        //     }
-        // }
-    }
-
-    function swapNGNTForLINK_ERC20(uint256 _amountIn, uint256 _amountOut, address[] memory path) private {
-        if (NGNT.allowance(address(this), address(pancakeswap)) < _amountIn) {
-            NGNT.approve(address(pancakeswap), type(uint256).max);
-        }
+    function swapNGNTForLINK_ERC20(uint256 _amountIn, uint256 _amountOut) private {
 
         pancakeswap.swapTokensForExactTokens(
             _amountOut,
             _amountIn,
-            path,
+            path_NGNTLINKERC20,
             address(this),
             block.timestamp.add(20 minutes)
         );
     }
 
     function swapLINK_ERC20ForLINK_ERC677(uint256 _amount) private {
-        if (LINK_ERC20.allowance(address(this), address(pegswap)) < _amount) {
-            LINK_ERC20.approve(address(pegswap), type(uint256).max);
-        }
-
         require(
             LINK_ERC20.balanceOf(address(this)) >= _amount,
             "WinNgnt: ERC20 LINK balance not enough for swap"
         );
         pegswap.swap(_amount, address(LINK_ERC20), address(LINK_ERC677));
+    }
+
+
+    function swapNGNTForBNB() private {
+        if(relayHub.balanceOf(paymaster) <  1 ether){
+            uint tokenSold = commission;
+            commission = 0;
+            pancakeswap.swapExactTokensForETH(
+              tokenSold,
+              1 wei,
+              path_NGNTBNB,
+              address(this),
+              block.timestamp.add(20 minutes)
+            );
+        }
     }
 
     function resetGame() private {

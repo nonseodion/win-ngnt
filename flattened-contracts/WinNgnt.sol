@@ -1,6 +1,5 @@
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier:MIT
 
 pragma solidity ^0.7.0;
 
@@ -80,7 +79,7 @@ interface IERC20 {
 
 // File: contracts/interfaces/IPancakeRouter01.sol
 
-// SPDX-License-Identifier:MIT
+
 pragma solidity 0.7.6;
 
 interface IPancakeRouter01 {
@@ -179,7 +178,7 @@ interface IPancakeRouter01 {
 
 // File: contracts/interfaces/IPancakeRouter02.sol
 
-// SPDX-License-Identifier:MIT
+
 pragma solidity 0.7.6;
 
 
@@ -226,7 +225,7 @@ interface IPancakeRouter02 is IPancakeRouter01 {
 
 // File: contracts/interfaces/IPegswap.sol
 
-// SPDX-License-Identifier:MIT
+
 pragma solidity 0.7.6;
 interface IPegswap{
   /**
@@ -245,7 +244,7 @@ interface IPegswap{
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.7.0;
 
@@ -460,9 +459,434 @@ library SafeMath {
     }
 }
 
+// File: @opengsn/contracts/src/forwarder/IForwarder.sol
+
+
+pragma solidity >=0.7.6;
+pragma abicoder v2;
+
+interface IForwarder {
+
+    struct ForwardRequest {
+        address from;
+        address to;
+        uint256 value;
+        uint256 gas;
+        uint256 nonce;
+        bytes data;
+        uint256 validUntil;
+    }
+
+    event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
+
+    event RequestTypeRegistered(bytes32 indexed typeHash, string typeStr);
+
+    function getNonce(address from)
+    external view
+    returns(uint256);
+
+    /**
+     * verify the transaction would execute.
+     * validate the signature and the nonce of the request.
+     * revert if either signature or nonce are incorrect.
+     * also revert if domainSeparator or requestTypeHash are not registered.
+     */
+    function verify(
+        ForwardRequest calldata forwardRequest,
+        bytes32 domainSeparator,
+        bytes32 requestTypeHash,
+        bytes calldata suffixData,
+        bytes calldata signature
+    ) external view;
+
+    /**
+     * execute a transaction
+     * @param forwardRequest - all transaction parameters
+     * @param domainSeparator - domain used when signing this request
+     * @param requestTypeHash - request type used when signing this request.
+     * @param suffixData - the extension data used when signing this request.
+     * @param signature - signature to validate.
+     *
+     * the transaction is verified, and then executed.
+     * the success and ret of "call" are returned.
+     * This method would revert only verification errors. target errors
+     * are reported using the returned "success" and ret string
+     */
+    function execute(
+        ForwardRequest calldata forwardRequest,
+        bytes32 domainSeparator,
+        bytes32 requestTypeHash,
+        bytes calldata suffixData,
+        bytes calldata signature
+    )
+    external payable
+    returns (bool success, bytes memory ret);
+
+    /**
+     * Register a new Request typehash.
+     * @param typeName - the name of the request type.
+     * @param typeSuffix - any extra data after the generic params.
+     *  (must add at least one param. The generic ForwardRequest type is always registered by the constructor)
+     */
+    function registerRequestType(string calldata typeName, string calldata typeSuffix) external;
+
+    /**
+     * Register a new domain separator.
+     * The domain separator must have the following fields: name,version,chainId, verifyingContract.
+     * the chainId is the current network's chainId, and the verifyingContract is this forwarder.
+     * This method is given the domain name and version to create and register the domain separator value.
+     * @param name the domain's display name
+     * @param version the domain/protocol version
+     */
+    function registerDomainSeparator(string calldata name, string calldata version) external;
+}
+
+// File: @opengsn/contracts/src/utils/GsnTypes.sol
+
+
+pragma solidity >=0.7.6;
+
+
+interface GsnTypes {
+    /// @notice gasPrice, pctRelayFee and baseRelayFee must be validated inside of the paymaster's preRelayedCall in order not to overpay
+    struct RelayData {
+        uint256 gasPrice;
+        uint256 pctRelayFee;
+        uint256 baseRelayFee;
+        address relayWorker;
+        address paymaster;
+        address forwarder;
+        bytes paymasterData;
+        uint256 clientId;
+    }
+
+    //note: must start with the ForwardRequest to be an extension of the generic forwarder
+    struct RelayRequest {
+        IForwarder.ForwardRequest request;
+        RelayData relayData;
+    }
+}
+
+// File: @opengsn/contracts/src/interfaces/IStakeManager.sol
+
+
+pragma solidity >=0.7.6;
+
+
+interface IStakeManager {
+
+    /// Emitted when a stake or unstakeDelay are initialized or increased
+    event StakeAdded(
+        address indexed relayManager,
+        address indexed owner,
+        uint256 stake,
+        uint256 unstakeDelay
+    );
+
+    /// Emitted once a stake is scheduled for withdrawal
+    event StakeUnlocked(
+        address indexed relayManager,
+        address indexed owner,
+        uint256 withdrawBlock
+    );
+
+    /// Emitted when owner withdraws relayManager funds
+    event StakeWithdrawn(
+        address indexed relayManager,
+        address indexed owner,
+        uint256 amount
+    );
+
+    /// Emitted when an authorized Relay Hub penalizes a relayManager
+    event StakePenalized(
+        address indexed relayManager,
+        address indexed beneficiary,
+        uint256 reward
+    );
+
+    event HubAuthorized(
+        address indexed relayManager,
+        address indexed relayHub
+    );
+
+    event HubUnauthorized(
+        address indexed relayManager,
+        address indexed relayHub,
+        uint256 removalBlock
+    );
+
+    event OwnerSet(
+        address indexed relayManager,
+        address indexed owner
+    );
+
+    /// @param stake - amount of ether staked for this relay
+    /// @param unstakeDelay - number of blocks to elapse before the owner can retrieve the stake after calling 'unlock'
+    /// @param withdrawBlock - first block number 'withdraw' will be callable, or zero if the unlock has not been called
+    /// @param owner - address that receives revenue and manages relayManager's stake
+    struct StakeInfo {
+        uint256 stake;
+        uint256 unstakeDelay;
+        uint256 withdrawBlock;
+        address payable owner;
+    }
+
+    struct RelayHubInfo {
+        uint256 removalBlock;
+    }
+
+    /// Set the owner of a Relay Manager. Called only by the RelayManager itself.
+    /// Note that owners cannot transfer ownership - if the entry already exists, reverts.
+    /// @param owner - owner of the relay (as configured off-chain)
+    function setRelayManagerOwner(address payable owner) external;
+
+    /// Only the owner can call this function. If the entry does not exist, reverts.
+    /// @param relayManager - address that represents a stake entry and controls relay registrations on relay hubs
+    /// @param unstakeDelay - number of blocks to elapse before the owner can retrieve the stake after calling 'unlock'
+    function stakeForRelayManager(address relayManager, uint256 unstakeDelay) external payable;
+
+    function unlockStake(address relayManager) external;
+
+    function withdrawStake(address relayManager) external;
+
+    function authorizeHubByOwner(address relayManager, address relayHub) external;
+
+    function authorizeHubByManager(address relayHub) external;
+
+    function unauthorizeHubByOwner(address relayManager, address relayHub) external;
+
+    function unauthorizeHubByManager(address relayHub) external;
+
+    function isRelayManagerStaked(address relayManager, address relayHub, uint256 minAmount, uint256 minUnstakeDelay)
+    external
+    view
+    returns (bool);
+
+    /// Slash the stake of the relay relayManager. In order to prevent stake kidnapping, burns half of stake on the way.
+    /// @param relayManager - entry to penalize
+    /// @param beneficiary - address that receives half of the penalty amount
+    /// @param amount - amount to withdraw from stake
+    function penalizeRelayManager(address relayManager, address payable beneficiary, uint256 amount) external;
+
+    function getStakeInfo(address relayManager) external view returns (StakeInfo memory stakeInfo);
+
+    function maxUnstakeDelay() external view returns (uint256);
+
+    function versionSM() external view returns (string memory);
+}
+
+// File: @opengsn/contracts/src/interfaces/IRelayHub.sol
+
+
+pragma solidity >=0.7.6;
+
+
+interface IRelayHub {
+    struct RelayHubConfig {
+        // maximum number of worker accounts allowed per manager
+        uint256 maxWorkerCount;
+        // Gas set aside for all relayCall() instructions to prevent unexpected out-of-gas exceptions
+        uint256 gasReserve;
+        // Gas overhead to calculate gasUseWithoutPost
+        uint256 postOverhead;
+        // Gas cost of all relayCall() instructions after actual 'calculateCharge()'
+        // Assume that relay has non-zero balance (costs 15'000 more otherwise).
+        uint256 gasOverhead;
+        // Maximum funds that can be deposited at once. Prevents user error by disallowing large deposits.
+        uint256 maximumRecipientDeposit;
+        // Minimum unstake delay blocks of a relay manager's stake on the StakeManager
+        uint256 minimumUnstakeDelay;
+        // Minimum stake a relay can have. An attack on the network will never cost less than half this value.
+        uint256 minimumStake;
+        // relayCall()'s msg.data upper bound gas cost per byte
+        uint256 dataGasCostPerByte;
+        // relayCalls() minimal gas overhead when calculating cost of putting tx on chain.
+        uint256 externalCallDataCostOverhead;
+    }
+
+    event RelayHubConfigured(RelayHubConfig config);
+
+    /// Emitted when a relay server registers or updates its details
+    /// Looking at these events lets a client discover relay servers
+    event RelayServerRegistered(
+        address indexed relayManager,
+        uint256 baseRelayFee,
+        uint256 pctRelayFee,
+        string relayUrl
+    );
+
+    /// Emitted when relays are added by a relayManager
+    event RelayWorkersAdded(
+        address indexed relayManager,
+        address[] newRelayWorkers,
+        uint256 workersCount
+    );
+
+    /// Emitted when an account withdraws funds from RelayHub.
+    event Withdrawn(
+        address indexed account,
+        address indexed dest,
+        uint256 amount
+    );
+
+    /// Emitted when depositFor is called, including the amount and account that was funded.
+    event Deposited(
+        address indexed paymaster,
+        address indexed from,
+        uint256 amount
+    );
+
+    /// Emitted when an attempt to relay a call fails and Paymaster does not accept the transaction.
+    /// The actual relayed call was not executed, and the recipient not charged.
+    /// @param reason contains a revert reason returned from preRelayedCall or forwarder.
+    event TransactionRejectedByPaymaster(
+        address indexed relayManager,
+        address indexed paymaster,
+        address indexed from,
+        address to,
+        address relayWorker,
+        bytes4 selector,
+        uint256 innerGasUsed,
+        bytes reason
+    );
+
+    /// Emitted when a transaction is relayed. Note that the actual encoded function might be reverted: this will be
+    /// indicated in the status field.
+    /// Useful when monitoring a relay's operation and relayed calls to a contract.
+    /// Charge is the ether value deducted from the recipient's balance, paid to the relay's manager.
+    event TransactionRelayed(
+        address indexed relayManager,
+        address indexed relayWorker,
+        address indexed from,
+        address to,
+        address paymaster,
+        bytes4 selector,
+        RelayCallStatus status,
+        uint256 charge
+    );
+
+    event TransactionResult(
+        RelayCallStatus status,
+        bytes returnValue
+    );
+
+    event HubDeprecated(uint256 fromBlock);
+
+    /// Reason error codes for the TransactionRelayed event
+    /// @param OK - the transaction was successfully relayed and execution successful - never included in the event
+    /// @param RelayedCallFailed - the transaction was relayed, but the relayed call failed
+    /// @param RejectedByPreRelayed - the transaction was not relayed due to preRelatedCall reverting
+    /// @param RejectedByForwarder - the transaction was not relayed due to forwarder check (signature,nonce)
+    /// @param PostRelayedFailed - the transaction was relayed and reverted due to postRelatedCall reverting
+    /// @param PaymasterBalanceChanged - the transaction was relayed and reverted due to the paymaster balance change
+    enum RelayCallStatus {
+        OK,
+        RelayedCallFailed,
+        RejectedByPreRelayed,
+        RejectedByForwarder,
+        RejectedByRecipientRevert,
+        PostRelayedFailed,
+        PaymasterBalanceChanged
+    }
+
+    /// Add new worker addresses controlled by sender who must be a staked Relay Manager address.
+    /// Emits a RelayWorkersAdded event.
+    /// This function can be called multiple times, emitting new events
+    function addRelayWorkers(address[] calldata newRelayWorkers) external;
+
+    function registerRelayServer(uint256 baseRelayFee, uint256 pctRelayFee, string calldata url) external;
+
+    // Balance management
+
+    /// Deposits ether for a contract, so that it can receive (and pay for) relayed transactions. Unused balance can only
+    /// be withdrawn by the contract itself, by calling withdraw.
+    /// Emits a Deposited event.
+    function depositFor(address target) external payable;
+
+    /// Withdraws from an account's balance, sending it back to it. Relay managers call this to retrieve their revenue, and
+    /// contracts can also use it to reduce their funding.
+    /// Emits a Withdrawn event.
+    function withdraw(uint256 amount, address payable dest) external;
+
+    // Relaying
+
+
+    /// Relays a transaction. For this to succeed, multiple conditions must be met:
+    ///  - Paymaster's "preRelayCall" method must succeed and not revert
+    ///  - the sender must be a registered Relay Worker that the user signed
+    ///  - the transaction's gas price must be equal or larger than the one that was signed by the sender
+    ///  - the transaction must have enough gas to run all internal transactions if they use all gas available to them
+    ///  - the Paymaster must have enough balance to pay the Relay Worker for the scenario when all gas is spent
+    ///
+    /// If all conditions are met, the call will be relayed and the recipient charged.
+    ///
+    /// Arguments:
+    /// @param maxAcceptanceBudget - max valid value for paymaster.getGasLimits().acceptanceBudget
+    /// @param relayRequest - all details of the requested relayed call
+    /// @param signature - client's EIP-712 signature over the relayRequest struct
+    /// @param approvalData: dapp-specific data forwarded to preRelayedCall.
+    ///        This value is *not* verified by the Hub. For example, it can be used to pass a signature to the Paymaster
+    /// @param externalGasLimit - the value passed as gasLimit to the transaction.
+    ///
+    /// Emits a TransactionRelayed event.
+    function relayCall(
+        uint maxAcceptanceBudget,
+        GsnTypes.RelayRequest calldata relayRequest,
+        bytes calldata signature,
+        bytes calldata approvalData,
+        uint externalGasLimit
+    )
+    external
+    returns (bool paymasterAccepted, bytes memory returnValue);
+
+    function penalize(address relayWorker, address payable beneficiary) external;
+
+    function setConfiguration(RelayHubConfig memory _config) external;
+
+    // Deprecate hub (reverting relayCall()) from block number 'fromBlock'
+    // Can only be called by owner
+    function deprecateHub(uint256 fromBlock) external;
+
+    /// The fee is expressed as a base fee in wei plus percentage on actual charge.
+    /// E.g. a value of 40 stands for a 40% fee, so the recipient will be
+    /// charged for 1.4 times the spent amount.
+    function calculateCharge(uint256 gasUsed, GsnTypes.RelayData calldata relayData) external view returns (uint256);
+
+    /* getters */
+
+    /// Returns the whole hub configuration
+    function getConfiguration() external view returns (RelayHubConfig memory config);
+
+    function calldataGasCost(uint256 length) external view returns (uint256);
+
+    function workerToManager(address worker) external view returns(address);
+
+    function workerCount(address manager) external view returns(uint256);
+
+    /// Returns an account's deposits. It can be either a deposit of a paymaster, or a revenue of a relay manager.
+    function balanceOf(address target) external view returns (uint256);
+
+    function stakeManager() external view returns (IStakeManager);
+
+    function penalizer() external view returns (address);
+
+    /// Uses StakeManager info to decide if the Relay Manager can be considered staked
+    /// @return true if stake size and delay satisfy all requirements
+    function isRelayManagerStaked(address relayManager) external view returns(bool);
+
+    // Checks hubs' deprecation status
+    function isDeprecated() external view returns (bool);
+
+    // Returns the block number from which the hub no longer allows relaying calls.
+    function deprecationBlock() external view returns (uint256);
+
+    /// @return a SemVer-compliant version of the hub contract
+    function versionHub() external view returns (string memory);
+}
+
 // File: @opengsn/contracts/src/interfaces/IRelayRecipient.sol
 
-// SPDX-License-Identifier: GPL-3.0-only
+
 pragma solidity >=0.7.6;
 
 /**
@@ -501,7 +925,7 @@ abstract contract IRelayRecipient {
 
 // File: @opengsn/contracts/src/BaseRelayRecipient.sol
 
-// SPDX-License-Identifier: GPL-3.0-only
+
 // solhint-disable no-inline-assembly
 pragma solidity >=0.7.6;
 
@@ -559,7 +983,7 @@ abstract contract BaseRelayRecipient is IRelayRecipient {
 
 // File: @chainlink/contracts/src/v0.7/vendor/SafeMathChainlink.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.7.0;
 
 /**
@@ -715,7 +1139,7 @@ library SafeMathChainlink {
 
 // File: @chainlink/contracts/src/v0.7/interfaces/LinkTokenInterface.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.7.0;
 
 interface LinkTokenInterface {
@@ -823,7 +1247,7 @@ interface LinkTokenInterface {
 
 // File: @chainlink/contracts/src/v0.7/dev/VRFRequestIDBase.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.7.0;
 
 contract VRFRequestIDBase {
@@ -882,7 +1306,7 @@ contract VRFRequestIDBase {
 
 // File: @chainlink/contracts/src/v0.7/dev/VRFConsumerBase.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.7.0;
 
 
@@ -923,8 +1347,8 @@ pragma solidity ^0.7.0;
  * @dev   }
  *
  * @dev The oracle will have given you an ID for the VRF keypair they have
- * @dev committed to (let's call it keyHash), and have told you the minimum LINK
- * @dev price for VRF service. Make sure your contract has sufficient LINK, and
+ * @dev committed to (let's call it keyHash), and have told you the minimum LINK_ERC677
+ * @dev price for VRF service. Make sure your contract has sufficient LINK_ERC677, and
  * @dev call requestRandomness(keyHash, fee, seed), where seed is the input you
  * @dev want to generate randomness from.
  *
@@ -1023,7 +1447,7 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
    * @dev VRF seed it ultimately uses.
    *
    * @param _keyHash ID of public key against which randomness is generated
-   * @param _fee The amount of LINK to send with the request
+   * @param _fee The amount of LINK_ERC677 to send with the request
    * @param _seed seed mixed into the input of the VRF.
    *
    * @return requestId unique ID for this request
@@ -1042,14 +1466,14 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
       bytes32 requestId
     )
   {
-    LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
+    LINK_ERC677.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
     // This is the seed passed to VRFCoordinator. The oracle will mix this with
     // the hash of the block containing this request to obtain the seed/input
     // which is finally passed to the VRF cryptographic machinery.
     uint256 vRFSeed  = makeVRFInputSeed(_keyHash, _seed, address(this), nonces[_keyHash]);
     // nonces[_keyHash] must stay in sync with
     // VRFCoordinator.nonces[_keyHash][this], which was incremented by the above
-    // successful LINK.transferAndCall (in VRFCoordinator.randomnessRequest).
+    // successful LINK_ERC677.transferAndCall (in VRFCoordinator.randomnessRequest).
     // This provides protection against the user repeating their input seed,
     // which would result in a predictable/duplicate output, if multiple such
     // requests appeared in the same block.
@@ -1057,7 +1481,7 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
     return makeRequestId(_keyHash, vRFSeed);
   }
 
-  LinkTokenInterface immutable internal LINK;
+  LinkTokenInterface immutable internal LINK_ERC677;
   address immutable private vrfCoordinator;
 
   // Nonces for each VRF key from which randomness has been requested.
@@ -1067,7 +1491,7 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
 
   /**
    * @param _vrfCoordinator address of VRFCoordinator contract
-   * @param _link address of LINK token contract
+   * @param _link address of LINK_ERC677 token contract
    *
    * @dev https://docs.chain.link/docs/link-token-contracts
    */
@@ -1076,7 +1500,7 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
     address _link
   ) {
     vrfCoordinator = _vrfCoordinator;
-    LINK = LinkTokenInterface(_link);
+    LINK_ERC677 = LinkTokenInterface(_link);
   }
 
   // rawFulfillRandomness is called by VRFCoordinator when it receives a valid VRF
@@ -1093,10 +1517,360 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
   }
 }
 
+// File: @openzeppelin/contracts/utils/Context.sol
+
+
+
+pragma solidity >=0.6.0 <0.8.0;
+
+/*
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with GSN meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address payable) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes memory) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        return msg.data;
+    }
+}
+
+// File: contracts/tokens/ERC20.sol
+
+
+
+pragma solidity ^0.7.0;
+
+
+
+
+/**
+ * @dev Implementation of the {IERC20} interface.
+ *
+ * This implementation is agnostic to the way tokens are created. This means
+ * that a supply mechanism has to be added in a derived contract using {_mint}.
+ * For a generic mechanism see {ERC20PresetMinterPauser}.
+ *
+ * TIP: For a detailed writeup see our guide
+ * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
+ * to implement supply mechanisms].
+ *
+ * We have followed general OpenZeppelin guidelines: functions revert instead
+ * of returning `false` on failure. This behavior is nonetheless conventional
+ * and does not conflict with the expectations of ERC20 applications.
+ *
+ * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
+ * This allows applications to reconstruct the allowance for all accounts just
+ * by listening to said events. Other implementations of the EIP may not emit
+ * these events, as it isn't required by the specification.
+ *
+ * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
+ * functions have been added to mitigate the well-known issues around setting
+ * allowances. See {IERC20-approve}.
+ */
+contract ERC20 is Context, IERC20 {
+    using SafeMath for uint256;
+
+    mapping (address => uint256) private _balances;
+
+    mapping (address => mapping (address => uint256)) private _allowances;
+
+    uint256 private _totalSupply;
+
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+
+    /**
+     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
+     * a default value of 18.
+     *
+     * To select a different value for {decimals}, use {_setupDecimals}.
+     *
+     * All three of these values are immutable: they can only be set once during
+     * construction.
+     */
+    constructor (string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = 2;
+    }
+
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name() public view virtual returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() public view virtual returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
+     * called.
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
+     */
+    function decimals() public view virtual returns (uint8) {
+        return _decimals;
+    }
+
+    /**
+     * @dev See {IERC20-totalSupply}.
+     */
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
+    }
+
+    /**
+     * @dev See {IERC20-balanceOf}.
+     */
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return _balances[account];
+    }
+
+    /**
+     * @dev See {IERC20-transfer}.
+     *
+     * Requirements:
+     *
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
+     */
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-allowance}.
+     */
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    /**
+     * @dev See {IERC20-approve}.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        _approve(_msgSender(), spender, amount);
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * Requirements:
+     *
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(sender, recipient, amount);
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        return true;
+    }
+
+    /**
+     * @dev Atomically increases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        return true;
+    }
+
+    /**
+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     * - `spender` must have allowance for the caller of at least
+     * `subtractedValue`.
+     */
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        return true;
+    }
+
+    /**
+     * @dev Moves tokens `amount` from `sender` to `recipient`.
+     *
+     * This is internal function is equivalent to {transfer}, and can be used to
+     * e.g. implement automatic token fees, slashing mechanisms, etc.
+     *
+     * Emits a {Transfer} event.
+     *
+     * Requirements:
+     *
+     * - `sender` cannot be the zero address.
+     * - `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     */
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
+
+        _beforeTokenTransfer(sender, recipient, amount);
+
+        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[recipient] = _balances[recipient].add(amount);
+        emit Transfer(sender, recipient, amount);
+    }
+
+    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+     * the total supply.
+     *
+     * Emits a {Transfer} event with `from` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     */
+    function _mint(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: mint to the zero address");
+
+        _beforeTokenTransfer(address(0), account, amount);
+
+        _totalSupply = _totalSupply.add(amount);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, reducing the
+     * total supply.
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens.
+     */
+    function _burn(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(account, address(0), amount);
+
+        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        _totalSupply = _totalSupply.sub(amount);
+        emit Transfer(account, address(0), amount);
+    }
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     *
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     */
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
+        _allowances[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Sets {decimals} to a value other than the default one of 18.
+     *
+     * WARNING: This function should only be called from the constructor. Most
+     * applications that interact with token contracts will not expect
+     * {decimals} to ever change, and may work incorrectly if it does.
+     */
+    function _setupDecimals(uint8 decimals_) internal virtual {
+        _decimals = decimals_;
+    }
+
+    /**
+     * @dev Hook that is called before any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * will be to transferred to `to`.
+     * - when `from` is zero, `amount` tokens will be minted for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
+}
+
+// File: contracts/tokens/NGNT.sol
+
+
+pragma solidity 0.7.6;
+
+
+contract NGNTContract is ERC20("Naira Token", "NGNT"){
+  uint256 public gsnFee;
+  constructor() {
+    _mint(msg.sender, 1e18);
+  }
+}
+
 // File: contracts/WinNgnt.sol
 
-// SPDX-License-Identifier:MIT
+
 pragma solidity 0.7.6;
+
+
 
 
 
@@ -1107,14 +1881,15 @@ pragma solidity 0.7.6;
 contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     using SafeMath for uint256;
 
-    IERC20 public NGNT;
+    NGNTContract public NGNT;
     //ERC20 version of original ERC677 token
     IERC20 public LINK_ERC20;
     IPancakeRouter02 private pancakeswap;
     IPegswap public pegswap;
+    IRelayHub public relayHub;
 
     address public WBNB;
-    uint256 public TOTAL_NGNT = 0;
+    address private paymaster;
 
     struct Game {
         address[] tickets;
@@ -1123,18 +1898,18 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
     uint256 public commission;
     uint256 public gameNumber = 1;
-    uint256 public deadline = 1742680400;
     uint256 public ticketPrice = 50000;
-    uint256 public minimumEther = 1 wei;
     uint256 public maximumPurchasableTickets = 250;
-    uint256 public maximumTicketsPerAddress = 10;
-    uint256 public targetAmount = 1000000000000000000;
+    uint256 public maximumTicketsPerAddress = 250;
+    uint256 public TOTAL_NGNT;
+    uint256 gsnFee = 5000;
     uint256 internal chainLinkFee;
 
-    bool public exchangeContractApproval;
+    address[] path_NGNTBNB;
+    address[] path_NGNTLINKERC20;
 
     string public override versionRecipient =
-        "2.2.0+opengsn.sample.irelayrecipient";
+        "2.2.0+opengsn.winngnt.irelayrecipient";
 
     bytes32 internal keyHash;
 
@@ -1142,7 +1917,6 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
     mapping(address => uint256) public addressTicketCount;
     mapping(uint256 => mapping(address => uint256))
         public addressTicketCountPerGame;
-    mapping(address => bool) public addressHasPaidGsnFee;
     mapping(bytes32 => bool) public pendingQueries;
 
     event GameEnded(uint256 gameNumber);
@@ -1199,27 +1973,23 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         _;
     }
 
-    modifier checkTrustedForwarder() {
-        if (msg.sender != _msgSender()) {
-            require(
-                msg.sender == trustedForwarder,
-                "WinNgnt:Not a trusted forwarder"
-            );
-        }
-        _;
-    }
-
     constructor(
-        IERC20 _NGNT,
-        uint256 _maximumPurchasableTickets,
+        NGNTContract _NGNT,
         IPegswap _pegswap,
         IERC20 _LINK_ERC20,
         address _WBNB,
-        IPancakeRouter02 _pancakeswap
+        IPancakeRouter02 _pancakeswap,
+        IRelayHub _relayHub,
+        address _vrfCoordinator,
+        address _LINK_ERC677,
+        address _trustedForwarder,
+        address _paymaster,
+        uint256 _chainLinkFee,
+        uint256 _maximumPurchasableTickets
     )
         VRFConsumerBase(
-            0xa555fC018435bef5A13C6c6870a9d4C11DEC329C,
-            0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06
+            _vrfCoordinator,
+            _LINK_ERC677
         )
     {
         NGNT = _NGNT;
@@ -1229,7 +1999,15 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         pancakeswap = _pancakeswap;
         maximumPurchasableTickets = _maximumPurchasableTickets;
         keyHash = 0xcaf3c3727e033261d383b315559476f48034c13b18f8cafed4d871abe5049186;
-        chainLinkFee = 0.1 * 1e18;
+        chainLinkFee = _chainLinkFee;
+        trustedForwarder = _trustedForwarder;
+        relayHub = _relayHub;
+        paymaster = _paymaster;
+        path_NGNTLINKERC20 = [address(NGNT), WBNB, address(LINK_ERC20)];
+        path_NGNTBNB = [address(NGNT), WBNB];
+
+        NGNT.approve(address(pancakeswap), type(uint256).max);
+        LINK_ERC20.approve(address(pegswap), type(uint256).max);
     }
 
     function buyTicket(uint256 numberOfTickets)
@@ -1237,29 +2015,23 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         atLeastOneTicket(numberOfTickets)
         ticketLimitNotExceed(numberOfTickets)
         maxTicketPerAddressLimitNotExceed(_msgSender(), numberOfTickets)
-        checkTrustedForwarder
     {
         uint256 totalTicketPrice = ticketPrice.mul(numberOfTickets);
         uint256 totalAddressTicketCount = addressTicketCount[_msgSender()];
         uint256 totalAddressTicketCountPerGame =
             addressTicketCountPerGame[gameNumber][_msgSender()];
 
-        if (!addressHasPaidGsnFee[_msgSender()]) {
-            //uint gsnFee = NGNT.gsnFee();
-            uint256 gsnFee = 5000;
-            if (gsnFee <= 0) {
-                gsnFee = 5000;
-            }
 
-            totalTicketPrice = totalTicketPrice.sub(gsnFee);
-            addressHasPaidGsnFee[_msgSender()] = true;
-        }
-
-        TOTAL_NGNT += totalTicketPrice;
         NGNT.transferFrom(_msgSender(), address(this), totalTicketPrice);
+        uint addCommission = gsnFee.mul(numberOfTickets);
+        totalTicketPrice = totalTicketPrice.sub(addCommission);
+        commission = commission.add(addCommission);
+        
 
-        totalAddressTicketCount += numberOfTickets;
-        totalAddressTicketCountPerGame += numberOfTickets;
+        TOTAL_NGNT = TOTAL_NGNT.add(totalTicketPrice);
+
+        totalAddressTicketCount = totalAddressTicketCount.add(numberOfTickets);
+        totalAddressTicketCountPerGame = totalAddressTicketCountPerGame.add(numberOfTickets);
 
         addressTicketCount[_msgSender()] = totalAddressTicketCount;
         addressTicketCountPerGame[gameNumber][
@@ -1274,13 +2046,23 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         emit BoughtTicket(_msgSender(), numberOfTickets, totalTicketPrice);
 
         if (games[gameNumber].tickets.length == maximumPurchasableTickets) {
-            // if(gameNumber.mod(5) == 0){
-            //     swapNgntForEth();
-            //     fundRecipient();
-            // }
-            if (LINK.balanceOf(address(this)) < chainLinkFee) {
-                swapNGNTForLINK_ERC20(1e18);
-                swapLINK_ERC20ForERC677(1e17);
+
+            uint LINK_ERC677_Balance = LINK_ERC677.balanceOf(address(this));
+            if (LINK_ERC677_Balance < chainLinkFee) {
+                
+                uint amountOut = chainLinkFee - LINK_ERC677_Balance;
+                
+                uint[] memory amountsIn = pancakeswap.getAmountsIn(amountOut, path_NGNTLINKERC20);
+
+                if(commission >= amountsIn[0]){
+                    swapNGNTForLINK_ERC20(amountsIn[0], amountOut);
+                    swapLINK_ERC20ForLINK_ERC677(amountOut);
+                }
+
+                if(gameNumber.mod(5) == 0){
+                    swapNGNTForBNB();
+                    relayHub.depositFor{value: address(this).balance}(paymaster);
+                }
             }
             endGame();
         }
@@ -1318,8 +2100,8 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
     function generateRandomNumber() private {
         require(
-            LINK.balanceOf(address(this)) >= chainLinkFee,
-            "WinNgnt: ERC677 LINK balance not enough for query"
+            LINK_ERC677.balanceOf(address(this)) >= chainLinkFee,
+            "WinNgnt: LINK_ERC677 balance not enough for query"
         );
         bytes32 queryId =
             requestRandomness(keyHash, chainLinkFee, block.timestamp);
@@ -1337,59 +2119,45 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
         game.gameWinner = winner;
 
         uint256 amountWon = TOTAL_NGNT.mul(90).div(100);
-        commission += TOTAL_NGNT.sub(amountWon);
+        commission = NGNT.balanceOf(address(this)).sub(amountWon);
         resetGame();
         NGNT.transfer(winner, amountWon);
 
         emit WinnerSelected(winner, amountWon, gameNumber);
     }
 
-    function fundRecipient() private {
-        //uint relayBalance = _relayHub.balanceOf(address(this));
-        // if(relayBalance < targetAmount){
-        //     uint amountDifference = targetAmount.sub(relayBalance);
-        //     if(address(this).balance > amountDifference){
-        //         _relayHub.depositFor.value(amountDifference)(address(this));
-        //     }else{
-        //         _relayHub.depositFor.value(address(this).balance)(address(this));
-        //     }
-        // }
-    }
+    function swapNGNTForLINK_ERC20(uint256 _amountIn, uint256 _amountOut) private {
 
-    function swapNGNTForLINK_ERC20(uint256 _amount) private {
-        if (NGNT.allowance(address(this), address(pancakeswap)) < _amount) {
-            NGNT.approve(address(pancakeswap), type(uint256).max);
-        }
-
-        require(
-            NGNT.balanceOf(address(this)) >= _amount,
-            "WinNgnt: NGNT balance not enough for swap"
-        );
-        address[] memory path = new address[](3);
-        (path[0], path[1], path[2]) = (
-            address(NGNT),
-            WBNB,
-            address(LINK_ERC20)
-        );
-        pancakeswap.swapExactTokensForTokens(
-            _amount,
-            1,
-            path,
+        pancakeswap.swapTokensForExactTokens(
+            _amountOut,
+            _amountIn,
+            path_NGNTLINKERC20,
             address(this),
-            deadline
+            block.timestamp.add(20 minutes)
         );
     }
 
-    function swapLINK_ERC20ForERC677(uint256 _amount) private {
-        if (LINK_ERC20.allowance(address(this), address(pegswap)) < _amount) {
-            LINK_ERC20.approve(address(pegswap), type(uint256).max);
-        }
-
+    function swapLINK_ERC20ForLINK_ERC677(uint256 _amount) private {
         require(
             LINK_ERC20.balanceOf(address(this)) >= _amount,
             "WinNgnt: ERC20 LINK balance not enough for swap"
         );
-        pegswap.swap(_amount, address(LINK_ERC20), address(LINK));
+        pegswap.swap(_amount, address(LINK_ERC20), address(LINK_ERC677));
+    }
+
+
+    function swapNGNTForBNB() private {
+        if(relayHub.balanceOf(paymaster) <  1 ether){
+            uint tokenSold = commission;
+            commission = 0;
+            pancakeswap.swapExactTokensForETH(
+              tokenSold,
+              1 wei,
+              path_NGNTBNB,
+              address(this),
+              block.timestamp.add(20 minutes)
+            );
+        }
     }
 
     function resetGame() private {
@@ -1399,11 +2167,7 @@ contract WinNgnt is BaseRelayRecipient, VRFConsumerBase {
 
     function endGame() private {
         emit GameEnded(gameNumber);
-        generateRandomNumber();
-    }
-
-    function setForwarder(address _forwarder) public {
-        trustedForwarder = _forwarder;
+        if(LINK_ERC677.balanceOf(address(this)) >= chainLinkFee) generateRandomNumber();
     }
 
     receive() external payable {}
