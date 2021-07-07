@@ -1,35 +1,40 @@
 /* global artifacts */
 const WinNgnt = artifacts.require("WinNgnt");
 const Ngnt = artifacts.require("NGNT");
-const maximumPurchasableTicket = process.env.MAXIMUM_PURCHASABLE_TICKET;
-const pegswap = process.env.PEGSWAP;
-const ngnt = process.env.NGNT;
-const pancakeRouter = process.env.PANCAKE_ROUTER;
-const linkErc20 = process.env.LINK_ERC20;
+const {
+  bsc: {
+    ngnt,
+    pegswap,
+    LINK_ERC20,
+    wbnb,
+    pancakeRouter,
+    vrfCoordinator,
+    LINK_ERC677,
+    trustedForwarder,
+    paymaster,
+    relayHub,
+    chainLinkFee,
+    maximumPurchasableTickets,
+  }
+} = require("./utils/params.json");
 // const paymaster = process.env.ACCEPT_EVERYTHING_PAYMASTER;
-const wbnb = process.env.WBNB;
 
 module.exports = async (deployer, network) => {
-  if (network === "bscTestnet") {
+  if (network === "bsc") {
     await deployer.deploy(
       WinNgnt,
       ngnt,
-      maximumPurchasableTicket,
       pegswap,
-      linkErc20,
+      LINK_ERC20,
       wbnb,
       pancakeRouter,
+      relayHub,
+      vrfCoordinator,
+      LINK_ERC677,
+      trustedForwarder,
+      paymaster,
+      chainLinkFee,
+      maximumPurchasableTickets
     );
-  } //else if (network === "development") {
-  //   await deployer.deploy(Ngnt);
-  //   await deployer.deploy(
-  //     WinNgnt,
-  //     Ngnt.address,
-  //     maximumPurchasableTicket,
-  //     pegswap,
-  //     linkErc20,
-  //     wbnb,
-  //     pancakeRouter,
-  //   );
-  // }
+  }
 };
